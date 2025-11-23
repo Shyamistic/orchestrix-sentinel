@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src * 'self' blob: data: gap:; style-src * 'self' 'unsafe-inline' blob: data: gap:; script-src * 'self' 'unsafe-eval' 'unsafe-inline' blob: data: gap:; object-src * 'self' blob: data: gap:; img-src * 'self' 'unsafe-inline' blob: data: gap:; connect-src * 'self' 'unsafe-inline' blob: data: gap:; frame-src * 'self' blob: data: gap:;">
+    
     <title>ORCHESTRIX SENTINEL | IBM Research Edition</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
-    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -19,7 +20,11 @@
                 extend: {
                     fontFamily: { sans: ['Inter'], mono: ['JetBrains Mono'], tech: ['Rajdhani'] },
                     colors: { ibm: { blue: '#0f62fe', dark: '#161616', teal: '#009d9a', purple: '#8a3ffc', red: '#fa4d56', gray: '#262626' } },
-                    animation: { 'spin-slow': 'spin 12s linear infinite', 'pulse-fast': 'pulse 1.5s infinite', 'ping-slow': 'ping 3s cubic-bezier(0, 0, 0.2, 1) infinite' }
+                    animation: { 'spin-slow': 'spin 12s linear infinite', 'pulse-fast': 'pulse 1.5s infinite', 'scanline': 'scanline 8s linear infinite', 'slide-up': 'slideUp 0.3s ease-out forwards' },
+                    keyframes: {
+                        scanline: { '0%': { transform: 'translateY(-100%)' }, '100%': { transform: 'translateY(100%)' } },
+                        slideUp: { '0%': { opacity: 0, transform: 'translateY(20px)' }, '100%': { opacity: 1, transform: 'translateY(0)' } }
+                    }
                 }
             }
         }
@@ -28,13 +33,20 @@
     <style>
         :root { --glass-border: rgba(255, 255, 255, 0.08); --glass-bg: rgba(10, 10, 12, 0.85); }
         body { background-color: #050505; overflow: hidden; color: #e0e0e0; }
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: #0a0a0a; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+        ::-webkit-scrollbar-thumb:hover { background: #0f62fe; }
         .glass { background: var(--glass-bg); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); }
         .glass-card { background: rgba(20, 20, 25, 0.6); border: 1px solid rgba(255,255,255,0.05); transition: all 0.3s ease; }
         .glass-card:hover { border-color: #0f62fe; box-shadow: 0 0 20px rgba(15, 98, 254, 0.1); }
         .nav-btn.active { background: linear-gradient(90deg, rgba(15, 98, 254, 0.15), transparent); color: white; border-right: 2px solid #0f62fe; }
+        .scan-line { position: absolute; top: 0; left: 0; width: 100%; height: 5px; background: rgba(15, 98, 254, 0.3); opacity: 0.4; animation: scanline 6s linear infinite; pointer-events: none; z-index: 50; }
         .ledger-block.active::before { background: #009d9a; box-shadow: 0 0 5px #009d9a; }
-        .integration-dot { width: 8px; height: 8px; border-radius: 50%; background: #333; }
-        .integration-dot.active { background: #24a148; box-shadow: 0 0 10px #24a148; }
+        .node-circle { transition: all 0.5s ease; cursor: pointer; }
+        .node-circle:hover { stroke: white; stroke-width: 3px; }
+        .terminal-line { font-family: 'JetBrains Mono', monospace; font-size: 11px; margin-bottom: 2px; opacity: 0; animation: slideUp 0.1s forwards; }
+        .translate-y-full { transform: translateY(100%); }
     </style>
 </head>
 <body class="flex h-screen relative">
@@ -57,7 +69,7 @@
             </div>
             <div>
                 <h1 class="font-tech text-2xl font-bold tracking-wider text-white">ORCHESTRIX</h1>
-                <p class="text-[10px] text-gray-400 font-mono uppercase tracking-widest">Sentinel v7.0</p>
+                <p class="text-[10px] text-gray-400 font-mono uppercase tracking-widest">Sentinel v8.0</p>
             </div>
         </div>
         <nav class="flex-1 py-6 px-2 space-y-1 overflow-y-auto">
@@ -74,6 +86,7 @@
         <div class="p-4 border-t border-white/10 bg-black/20 font-mono text-[10px]">
             <div class="flex justify-between mb-1 text-gray-400"><span>WATSONX.API</span> <span class="text-green-400 font-bold">CONNECTED</span></div>
             <div class="flex justify-between mb-1 text-gray-400"><span>MCP SERVER</span> <span class="text-green-400 font-bold">ONLINE</span></div>
+            <div class="flex justify-between mb-1 text-gray-400"><span>STATUS</span> <span id="conn-status" class="text-yellow-500 font-bold">CONNECTING...</span></div>
         </div>
     </aside>
 
@@ -90,11 +103,11 @@
                     <div class="text-2xl font-bold text-ibm-blue font-tech" id="roi-risk">--</div>
                     <div class="text-[9px] text-gray-500 uppercase">Risk Avoided</div>
                 </div>
+                <button onclick="toggleDrawer()" class="relative p-2 hover:bg-white/5 rounded-full"><i class="far fa-bell text-gray-400"></i><span class="absolute top-2 right-2 w-2 h-2 bg-ibm-red rounded-full animate-pulse"></span></button>
             </div>
         </header>
 
         <div id="content-area" class="flex-1 overflow-y-auto p-6 relative scroll-smooth">
-            
             <div id="view-dashboard" class="view-section space-y-6">
                 <div class="grid grid-cols-4 gap-4">
                     <div class="glass-card p-5 rounded-xl border-l-2 border-ibm-blue">
@@ -120,23 +133,40 @@
                         <div class="px-4 py-3 bg-black/20 border-b border-white/10 flex justify-between items-center">
                             <h3 class="text-xs font-bold text-white flex items-center gap-2"><i class="fas fa-network-wired text-ibm-blue"></i> LIVE NEURAL EXECUTION DAG</h3>
                         </div>
-                        <div class="flex-1 relative bg-black/40 flex items-center justify-center" id="graph-container">
-                            <p class="text-gray-600 text-xs font-mono animate-pulse">AWAITING TRIGGER...</p>
+                        <div class="flex-1 relative bg-black/40 flex items-center justify-center overflow-hidden" id="graph-wrapper">
+                            <div class="scan-line"></div>
+                            <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10"></div>
+                            <div id="graph-container" class="relative z-10 flex flex-col items-center justify-center"><p class="text-gray-600 text-xs font-mono animate-pulse" id="graph-placeholder">SYSTEM STANDBY // AWAITING TRIGGER...</p></div>
                         </div>
                     </div>
                     <div class="col-span-1 glass-card rounded-xl border border-white/10 flex flex-col">
                         <div class="px-4 py-3 bg-black/20 border-b border-white/10">
                             <h3 class="text-xs font-bold text-white flex items-center gap-2"><i class="fas fa-link text-green-400"></i> IMMUTABLE TRUST LEDGER</h3>
                         </div>
-                        <div class="flex-1 overflow-y-auto p-4 space-y-3 bg-black/40 font-mono" id="ledger-container"></div>
+                        <div class="flex-1 overflow-y-auto p-4 space-y-3 bg-black/40 font-mono" id="ledger-container">
+                             <div class="ledger-block active"><div class="text-[9px] text-gray-500">GENESIS</div><div class="text-[10px] text-ibm-teal truncate">0x8f...init</div></div>
+                        </div>
                     </div>
+                </div>
+
+                <div class="glass-card rounded-xl overflow-hidden mt-4">
+                    <table class="w-full text-left text-xs text-gray-400">
+                        <thead class="bg-white/5 text-gray-300 uppercase font-mono">
+                            <tr>
+                                <th class="px-6 py-3">ID</th>
+                                <th class="px-6 py-3">Status</th>
+                                <th class="px-6 py-3">Compliance</th>
+                                <th class="px-6 py-3 text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="wf-table-body" class="divide-y divide-white/5 font-mono"></tbody>
+                    </table>
                 </div>
             </div>
 
             <div id="view-integration" class="view-section hidden">
                 <div class="glass-card p-8 rounded-xl h-full flex flex-col items-center justify-center text-center">
                     <h2 class="text-2xl font-bold text-white mb-8">Ecosystem Connectivity Mesh</h2>
-                    
                     <div class="relative w-full max-w-2xl h-64">
                         <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-10">
                             <div class="w-20 h-20 bg-black border-2 border-ibm-blue rounded-full flex items-center justify-center shadow-[0_0_40px_#0f62fe]">
@@ -144,59 +174,38 @@
                             </div>
                             <span class="mt-2 text-xs font-bold text-white">SENTINEL CORE</span>
                         </div>
-
                         <div class="absolute top-0 left-0 flex flex-col items-center">
                             <div class="w-12 h-12 bg-gray-900 border border-green-500 rounded-full flex items-center justify-center"><i class="fas fa-server text-green-500"></i></div>
                             <span class="text-[10px] mt-1 text-gray-400">MCP SERVER</span>
                             <span class="text-[9px] text-green-500 animate-pulse">ONLINE</span>
                         </div>
-                        
                         <div class="absolute top-0 right-0 flex flex-col items-center">
                             <div class="w-12 h-12 bg-gray-900 border border-purple-500 rounded-full flex items-center justify-center"><i class="fas fa-robot text-purple-500"></i></div>
                             <span class="text-[10px] mt-1 text-gray-400">WATSONX A2A</span>
                             <span class="text-[9px] text-purple-500 animate-pulse">LISTENING</span>
                         </div>
-
                         <div class="absolute bottom-0 left-1/2 transform -translate-x-1/2 flex flex-col items-center">
                             <div class="w-12 h-12 bg-gray-900 border border-teal-500 rounded-full flex items-center justify-center"><i class="fas fa-chart-pie text-teal-500"></i></div>
                             <span class="text-[10px] mt-1 text-gray-400">GOVERNANCE TELEMETRY</span>
                             <span class="text-[9px] text-teal-500 animate-pulse">STREAMING</span>
                         </div>
-
                         <svg class="absolute inset-0 w-full h-full pointer-events-none">
-                            <line x1="50%" y1="50%" x2="10%" y2="10%" stroke="#0f62fe" stroke-width="1" stroke-dasharray="5,5" class="animate-pulse" />
-                            <line x1="50%" y1="50%" x2="90%" y2="10%" stroke="#0f62fe" stroke-width="1" stroke-dasharray="5,5" class="animate-pulse" />
-                            <line x1="50%" y1="50%" x2="50%" y2="90%" stroke="#0f62fe" stroke-width="1" stroke-dasharray="5,5" class="animate-pulse" />
+                            <line x1="50%" y1="50%" x2="10%" y2="10%" stroke="#0f62fe" stroke-width="1" stroke-dasharray="5,5" />
+                            <line x1="50%" y1="50%" x2="90%" y2="10%" stroke="#0f62fe" stroke-width="1" stroke-dasharray="5,5" />
+                            <line x1="50%" y1="50%" x2="50%" y2="90%" stroke="#0f62fe" stroke-width="1" stroke-dasharray="5,5" />
                         </svg>
                     </div>
-
-                    <div class="mt-12 flex gap-4">
-                        <div class="bg-white/5 px-4 py-2 rounded text-xs text-gray-300 border border-white/10">MCP Endpoints: 2</div>
-                        <div class="bg-white/5 px-4 py-2 rounded text-xs text-gray-300 border border-white/10">A2A Handshakes: 14</div>
-                    </div>
                 </div>
             </div>
 
-            <div id="view-compliance" class="view-section hidden">
-                <div class="glass-card p-10 rounded-xl border border-ibm-teal/30 flex flex-col items-center justify-center h-[500px] text-center">
-                    <i class="fas fa-file-contract text-5xl text-ibm-teal mb-4"></i>
-                    <h2 class="text-2xl font-bold text-white">Guardian Engine (RAG)</h2>
-                    <p class="text-gray-400 text-sm mb-8">Drag & Drop Regulatory Policies (PDF/YAML) to embed them into the vector store.</p>
-                    <input type="file" class="hidden" id="policy-upload" onchange="handleUpload(this)">
-                    <button onclick="document.getElementById('policy-upload').click()" class="px-8 py-3 bg-ibm-teal/20 hover:bg-ibm-teal/40 border border-ibm-teal text-ibm-teal rounded font-bold transition-all">SELECT FILES</button>
-                    <div id="upload-status" class="mt-4 text-xs font-mono text-green-400 opacity-0 transition-opacity">Uploading...</div>
-                </div>
-            </div>
-            
             <div id="view-genesis" class="view-section hidden h-full flex flex-col">
                 <div class="grid grid-cols-2 gap-6 h-full">
                     <div class="glass-card p-8 rounded-xl flex flex-col justify-center items-center text-center relative overflow-hidden">
                         <div class="absolute inset-0 bg-ibm-purple/5"></div>
                         <i class="fas fa-wand-magic-sparkles text-5xl text-ibm-purple mb-6 animate-bounce"></i>
                         <h2 class="text-2xl font-bold text-white mb-2">JIT Skill Genesis</h2>
-                        <p class="text-gray-400 text-xs mb-6 max-w-xs">Describe a missing capability. IBM Granite will generate, lint, and hot-load the Python code instantly.</p>
                         <div class="w-full max-w-md relative">
-                            <input id="genesis-input" type="text" class="w-full bg-black/50 border border-white/20 rounded-lg py-3 px-4 text-white focus:border-ibm-purple focus:outline-none font-mono text-xs" placeholder="e.g. 'Fetch ETH price from CoinGecko'">
+                            <input id="genesis-input" type="text" class="w-full bg-black/50 border border-white/20 rounded-lg py-3 px-4 text-white focus:border-ibm-purple focus:outline-none font-mono text-xs" placeholder="e.g. 'Fetch ETH price'">
                             <button onclick="runGenesis()" class="absolute right-1 top-1 bottom-1 bg-ibm-purple hover:bg-purple-600 text-black font-bold px-4 rounded text-xs">GENERATE</button>
                         </div>
                     </div>
@@ -208,12 +217,33 @@
             </div>
 
             <div id="view-dtwin" class="view-section hidden">
-                <div class="glass-card p-10 text-center h-full flex flex-col justify-center">
-                    <h2 class="text-2xl font-bold text-white mb-4">Digital Twin Simulation</h2>
-                    <p class="text-gray-400 mb-8">Simulate Organizational Stress & Drift</p>
-                    <input type="range" class="w-1/2 mx-auto accent-ibm-blue" oninput="alert('Simulation running... check graph.')">
+                <div class="grid grid-cols-3 gap-6 h-[600px]">
+                    <div class="col-span-2 glass-card p-6 rounded-xl relative overflow-hidden bg-black/40" id="twin-map">
+                        <div class="absolute top-4 left-4 z-10 bg-black/60 px-3 py-1 rounded border border-white/10 text-xs font-bold text-white">ORGANIZATIONAL TOPOLOGY</div>
+                        <svg class="absolute inset-0 w-full h-full">
+                            <line x1="50%" y1="50%" x2="20%" y2="30%" stroke="#333" stroke-width="2" />
+                            <line x1="50%" y1="50%" x2="80%" y2="30%" stroke="#333" stroke-width="2" />
+                            <line x1="50%" y1="50%" x2="50%" y2="80%" stroke="#333" stroke-width="2" />
+                            <g id="node-hr"><circle cx="20%" cy="30%" r="15" fill="#333" stroke="#555" stroke-width="2" class="node-circle"/><text x="20%" y="35%" text-anchor="middle" fill="#888" font-size="10" dy="20">HR</text></g>
+                            <g id="node-fin"><circle cx="80%" cy="30%" r="15" fill="#333" stroke="#555" stroke-width="2" class="node-circle"/><text x="80%" y="35%" text-anchor="middle" fill="#888" font-size="10" dy="20">FINANCE</text></g>
+                            <g id="node-it"><circle cx="50%" cy="80%" r="15" fill="#333" stroke="#555" stroke-width="2" class="node-circle"/><text x="50%" y="85%" text-anchor="middle" fill="#888" font-size="10" dy="20">IT OPS</text></g>
+                            <circle cx="50%" cy="50%" r="25" fill="#0f62fe" stroke="white" stroke-width="2" class="node-pulse"/>
+                        </svg>
+                    </div>
+                    <div class="col-span-1 space-y-6">
+                        <div class="glass-card p-5 rounded-xl">
+                            <h4 class="text-xs font-bold text-white uppercase mb-4">Simulation Parameters</h4>
+                            <label class="text-[10px] text-gray-400">Hiring Velocity</label>
+                            <input type="range" class="w-full mb-4 h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-ibm-blue" oninput="updateSim(this.value)">
+                            <div class="flex justify-between items-end pt-4 border-t border-white/10">
+                                <span class="text-[10px] text-gray-400">SLA BREACH RISK</span>
+                                <span class="text-2xl font-bold text-ibm-blue" id="sim-risk-val">12%</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
+
              <div id="view-agents" class="view-section hidden">
                 <div class="glass-card p-10 text-center h-full flex flex-col justify-center">
                     <h2 class="text-2xl font-bold text-white mb-4">Multi-Agent Debate</h2>
@@ -222,11 +252,21 @@
                 </div>
             </div>
 
+            <div id="view-compliance" class="view-section hidden">
+                <div class="glass-card p-10 rounded-xl border border-ibm-teal/30 flex flex-col items-center justify-center h-[500px] text-center">
+                    <i class="fas fa-file-contract text-5xl text-ibm-teal mb-4"></i>
+                    <h2 class="text-2xl font-bold text-white">Guardian Engine (RAG)</h2>
+                    <button onclick="document.getElementById('policy-upload').click()" class="px-8 py-3 bg-ibm-teal/20 hover:bg-ibm-teal/40 border border-ibm-teal text-ibm-teal rounded font-bold transition-all">SELECT FILES</button>
+                    <input type="file" class="hidden" id="policy-upload" onchange="handleUpload(this)">
+                    <div id="upload-status" class="mt-4 text-xs font-mono text-green-400 opacity-0 transition-opacity">Uploading...</div>
+                </div>
+            </div>
+
         </div>
     </main>
 
     <div class="fixed bottom-8 right-8 z-50">
-        <button onclick="triggerVoice()" class="w-14 h-14 bg-blue-600 rounded-full shadow-lg hover:bg-blue-500 text-white flex items-center justify-center text-xl">
+        <button onclick="triggerVoice()" class="w-14 h-14 bg-blue-600 rounded-full shadow-lg hover:bg-blue-500 text-white flex items-center justify-center text-xl shadow-[0_0_20px_rgba(15,98,254,0.5)]">
             <i class="fas fa-microphone"></i>
         </button>
     </div>
@@ -238,7 +278,7 @@
         </div>
         <div class="flex-1 overflow-y-auto p-4 space-y-1" id="terminal-content"></div>
     </div>
-
+    
     <div id="whynot-modal" class="fixed inset-0 bg-black/90 z-[90] hidden flex items-center justify-center backdrop-blur-md">
         <div class="bg-[#121212] border border-ibm-purple w-[600px] rounded-lg shadow-[0_0_50px_rgba(138,63,252,0.2)] p-6 relative">
             <button onclick="document.getElementById('whynot-modal').classList.add('hidden')" class="absolute top-4 right-4 text-gray-500 hover:text-white"><i class="fas fa-times"></i></button>
@@ -256,6 +296,23 @@
                 <button onclick="resolveHitl('CONTINUE')" class="flex-1 py-3 bg-ibm-blue text-white rounded font-bold">AUTHORIZE</button>
             </div>
         </div>
+    </div>
+
+    <div id="voice-interface" class="fixed inset-0 bg-black/90 z-[100] hidden flex flex-col items-center justify-center backdrop-blur-xl">
+        <div class="w-32 h-32 rounded-full border-4 border-ibm-blue flex items-center justify-center relative mb-8">
+            <div class="w-24 h-24 bg-ibm-blue rounded-full animate-ping absolute opacity-20"></div>
+            <i class="fas fa-microphone text-4xl text-white"></i>
+        </div>
+        <input id="voice-transcript" type="text" class="bg-transparent border-b border-white/20 text-center text-2xl text-white pb-2 outline-none font-mono w-1/2" placeholder="Listening...">
+        <button onclick="confirmVoice()" class="mt-8 px-8 py-3 bg-white text-black font-bold rounded-full">EXECUTE</button>
+    </div>
+
+    <div id="drawer" class="fixed top-0 right-0 h-full w-80 bg-[#121212] border-l border-white/10 transform translate-x-full transition-transform duration-300 z-40 pt-20 px-6">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-white font-bold">Notification Log</h3>
+            <button onclick="toggleDrawer()" class="text-gray-500 hover:text-white"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="space-y-4" id="notification-list"></div>
     </div>
 
     <script>
@@ -300,27 +357,35 @@
                 updateSafe('kpi-total', data.total_workflows);
                 updateSafe('kpi-alerts', data.compliance_issues);
                 
-                const roi = await (await fetch(`${API_URL}/api/v1/analytics/roi`)).json();
-                updateSafe('roi-hours', roi.hours_saved);
-                updateSafe('roi-risk', roi.risk_avoided_value);
-                
+                const roiRes = await fetch(`${API_URL}/api/v1/analytics/roi`);
+                if(roiRes.ok) {
+                    const roi = await roiRes.json();
+                    updateSafe('roi-hours', roi.hours_saved);
+                    updateSafe('roi-risk', roi.risk_avoided_value);
+                }
+
                 const wfs = await (await fetch(`${API_URL}/api/v1/workflows`)).json();
                 renderTable(wfs);
                 if(wfs.length) updateGraph(wfs[0]);
 
-                const hitl = wfs.find(w => w.status === "WAITING_FOR_HUMAN");
-                if(hitl && activeHitlId !== hitl.id) { activeHitlId = hitl.id; document.getElementById('hitl-modal').classList.remove('hidden'); }
+                document.getElementById('conn-status').innerText = "CONNECTED";
+                document.getElementById('conn-status').className = "text-green-400 font-bold";
+                isSimulating = false;
 
                 updateLedger();
-                updateSparkline();
-                isSimulating = false;
+                
+                const hitl = wfs.find(w => w.status === "WAITING_FOR_HUMAN");
+                if(hitl && activeHitlId !== hitl.id) { activeHitlId = hitl.id; document.getElementById('hitl-modal').classList.remove('hidden'); }
+                
+                const graphPlaceholder = document.getElementById('graph-placeholder');
+                if(graphPlaceholder && wfs.length > 0) graphPlaceholder.style.display = 'none';
 
             } catch (e) {
                 console.warn("Backend offline. Simulation Mode.");
                 enableSimulation();
             }
         }
-
+        
         function updateSafe(id, val) {
             const el = document.getElementById(id);
             if(el) el.innerText = val;
@@ -329,27 +394,33 @@
         function enableSimulation() {
             if(isSimulating) return;
             isSimulating = true;
+            document.getElementById('conn-status').innerText = "SIMULATION MODE";
+            document.getElementById('conn-status').className = "text-blue-400 font-bold animate-pulse";
+            
             updateSafe('kpi-total', 12);
             updateSafe('kpi-alerts', 1);
             updateSafe('roi-hours', 142);
             updateSafe('roi-risk', "$450k");
+            
             const tbody = document.getElementById('wf-table-body');
-            if(tbody) tbody.innerHTML = `
-                <tr class="hover:bg-white/5 border-b border-white/5">
+            tbody.innerHTML = `
+                <tr class="hover:bg-white/5 transition-colors border-b border-white/5">
                     <td class="px-6 py-3 font-mono text-white">WFX-DEMO-01</td>
                     <td class="px-6 py-3 font-bold text-green-400">COMPLETED</td>
                     <td class="px-6 py-3 text-right"><button onclick="showWhyNot('demo')" class="text-xs bg-white/10 hover:bg-ibm-purple px-2 py-1 rounded">Explain</button></td>
-                </tr>`;
+                </tr>
+            `;
         }
 
         function renderTable(wfs) {
             const tbody = document.getElementById('wf-table-body');
-            if(tbody) tbody.innerHTML = wfs.slice(0, 6).map(w => `
-                <tr class="hover:bg-white/5 border-b border-white/5">
+            tbody.innerHTML = wfs.slice(0, 5).map(w => `
+                <tr class="hover:bg-white/5 transition-colors border-b border-white/5">
                     <td class="px-6 py-3 font-mono text-white">${w.id}</td>
                     <td class="px-6 py-3 font-bold ${w.status.includes('COMPLETED')?'text-green-400':'text-ibm-blue'}">${w.status}</td>
                     <td class="px-6 py-3 text-right"><button onclick="showWhyNot('${w.id}')" class="text-xs bg-white/10 hover:bg-ibm-purple px-2 py-1 rounded transition-colors">Explain</button></td>
-                </tr>`).join('');
+                </tr>
+            `).join('');
         }
 
         async function updateGraph(wf) {
@@ -385,15 +456,19 @@
             document.getElementById('whynot-modal').classList.remove('hidden');
         }
 
-        async function triggerVoice() {
-            const txt = prompt("Enter Command (e.g., 'Trigger Audit'):");
-            if(!txt) return;
-            if(isSimulating) {
-                 alert("Simulation: Triggered " + txt);
-                 updateSafe('kpi-total', 13);
-            } else {
-                 await fetch(`${API_URL}/api/v1/orchestrate/trigger`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({request_text: txt, department: "Executive"}) });
+        function triggerVoice() {
+             document.getElementById('voice-interface').classList.remove('hidden');
+        }
+        function cancelVoice() { document.getElementById('voice-interface').classList.add('hidden'); }
+        
+        async function confirmVoice() {
+            const txt = document.getElementById('voice-transcript').value;
+            document.getElementById('voice-interface').classList.add('hidden');
+            if(!isSimulating) {
+                 await fetch(`${API_URL}/api/v1/orchestrate/trigger`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({request_text: txt, department: "Executive"}) });
                  setTimeout(fetchData, 1000);
+            } else {
+                 alert("Simulation: Triggered " + txt);
             }
             nav('dashboard');
         }
@@ -401,6 +476,35 @@
         function resolveHitl(dec) {
              if(!isSimulating) fetch(`${API_URL}/api/v1/human-help/resolve`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ticket_id: activeHitlId, decision: dec}) });
              document.getElementById('hitl-modal').classList.add('hidden'); activeHitlId = null;
+        }
+        
+        function toggleCmdPalette() { document.getElementById('cmd-palette').classList.toggle('hidden'); }
+        function toggleTerminal() { document.getElementById('system-terminal').classList.toggle('translate-y-full'); }
+        function toggleDrawer() { 
+            const d = document.getElementById('drawer');
+            if(d.classList.contains('translate-x-full')) d.classList.remove('translate-x-full');
+            else d.classList.add('translate-x-full');
+        }
+        function logToTerminal(msg) { document.getElementById('terminal-content').innerHTML += `<div>[${new Date().toLocaleTimeString()}] ${msg}</div>`; }
+        function handleUpload(input) { 
+            const status = document.getElementById('upload-status');
+            status.classList.remove('opacity-0');
+            setTimeout(() => status.innerText = "Complete. Policy Active.", 2000);
+        }
+        function exportData() { alert("Trust Ledger exported to CSV."); }
+        function runCmd(cmd) { toggleCmdPalette(); triggerVoice(); }
+
+        function updateSim(val) { 
+            document.getElementById('sim-risk-val').innerText = Math.min(99, val*1.5).toFixed(0) + "%";
+            const hr = document.getElementById('node-hr').querySelector('circle');
+            const fin = document.getElementById('node-fin').querySelector('circle');
+            if(val > 60) { 
+                hr.setAttribute('fill', '#fa4d56'); hr.setAttribute('stroke', 'white');
+                fin.setAttribute('fill', '#fa4d56'); fin.setAttribute('stroke', 'white');
+            } else {
+                hr.setAttribute('fill', '#333'); hr.setAttribute('stroke', '#555');
+                fin.setAttribute('fill', '#333'); fin.setAttribute('stroke', '#555');
+            }
         }
         
         function runGenesis() {
@@ -416,11 +520,6 @@
             const turns = ["Security: VOTE YES", "Efficiency: VOTE YES", "Governance: VOTE YES"];
             turns.forEach((t, i) => setTimeout(() => container.innerHTML += `<div class="bg-white/5 p-2 mb-2 rounded">${t}</div>`, i*800));
         }
-
-        function toggleTerminal() { document.getElementById('system-terminal').classList.toggle('translate-y-full'); }
-        function logToTerminal(msg) { document.getElementById('terminal-content').innerHTML += `<div>[${new Date().toLocaleTimeString()}] ${msg}</div>`; }
-        function handleUpload() { setTimeout(() => document.getElementById('upload-status').innerText = "Complete.", 2000); }
-        function exportData() { alert("Exporting Trust Ledger..."); }
 
         // Charts
         const spark = new Chart(document.getElementById('latency-spark'), { type: 'line', data: { labels: Array(10).fill(''), datasets: [{data: Array(10).fill(50), borderColor: '#0f62fe', borderWidth: 2, pointRadius: 0, tension: 0.4}] }, options: {responsive:true, maintainAspectRatio:false, plugins:{legend:false}, scales:{x:{display:false}, y:{display:false}}} });
