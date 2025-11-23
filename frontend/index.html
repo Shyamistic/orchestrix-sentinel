@@ -406,12 +406,20 @@
         }
         function stopPolling() { isPolling = false; clearInterval(window.pollInt); clearInterval(window.clockInt); }
 
-        async function fetchData() {
+       async function fetchData() {
             try {
-                const stats = await (await fetch(`${API_URL}/dashboard/stats`)).json();
+                const statsRes = await fetch(`${API_URL}/dashboard/stats`);
+                
+                if (!statsRes.ok) throw new Error("Backend Warming Up");
+
+                const stats = await statsRes.json();
                 document.getElementById('kpi-total').innerText = stats.total_workflows;
                 document.getElementById('kpi-alerts').innerText = stats.compliance_issues;
                 
+                // Clear "Awaiting" message if data exists
+                const graphPlaceholder = document.getElementById('graph-placeholder');
+                if(graphPlaceholder) graphPlaceholder.style.display = 'none';
+
                 // ROI
                 const roi = await (await fetch(`${API_URL}/api/v1/analytics/roi`)).json();
                 if(document.getElementById('roi-hours')) {
@@ -421,15 +429,23 @@
 
                 const wfs = await (await fetch(`${API_URL}/api/v1/workflows`)).json();
                 renderTable(wfs);
-                if(wfs.length) updateGraph(wfs[0]);
+                if(wfs.length > 0) {
+                     updateGraph(wfs[0]);
+                }
 
                 const hitl = wfs.find(w => w.status === "WAITING_FOR_HUMAN");
                 if(hitl && activeHitlId !== hitl.id) { activeHitlId = hitl.id; document.getElementById('hitl-modal').classList.remove('hidden'); }
 
                 updateLedger();
                 updateSparkline();
-            } catch(e) {}
+            } catch(e) {
+                // Graceful Fallback Visualization
+                console.log("System Syncing...");
+                document.getElementById('graph-status-text').innerText = "SYNCING...";
+                document.getElementById('graph-status-text').classList.add('animate-pulse');
+            }
         }
+        
 
         function renderTable(wfs) {
             document.getElementById('wf-table-body').innerHTML = wfs.slice(0, 6).map(w => `
