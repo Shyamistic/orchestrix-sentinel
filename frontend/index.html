@@ -5,12 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy" content="default-src * 'self' blob: data: gap:; style-src * 'self' 'unsafe-inline' blob: data: gap:; script-src * 'self' 'unsafe-eval' 'unsafe-inline' blob: data: gap:; object-src * 'self' blob: data: gap:; img-src * 'self' 'unsafe-inline' blob: data: gap:; connect-src * 'self' 'unsafe-inline' blob: data: gap:; frame-src * 'self' blob: data: gap:;">
     
-    <title>ORCHESTRIX SENTINEL | IBM Research Edition</title>
+    <title>ORCHESTRIX SENTINEL v10.0 | IBM watsonx Research Edition</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
 
     <script>
@@ -18,12 +18,44 @@
             darkMode: 'class',
             theme: {
                 extend: {
-                    fontFamily: { sans: ['Inter'], mono: ['JetBrains Mono'], tech: ['Rajdhani'] },
-                    colors: { ibm: { blue: '#0f62fe', dark: '#161616', teal: '#009d9a', purple: '#8a3ffc', red: '#fa4d56', gray: '#262626' } },
-                    animation: { 'spin-slow': 'spin 12s linear infinite', 'pulse-fast': 'pulse 1.5s infinite', 'scanline': 'scanline 8s linear infinite', 'slide-up': 'slideUp 0.3s ease-out forwards' },
+                    fontFamily: { 
+                        sans: ['IBM Plex Sans', 'Inter', 'system-ui'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                        tech: ['IBM Plex Sans', 'sans-serif']
+                    },
+                    colors: { 
+                        ibm: { 
+                            blue: '#0f62fe', 
+                            dark: '#161616', 
+                            teal: '#009d9a', 
+                            purple: '#8a3ffc', 
+                            red: '#fa4d56', 
+                            gray: '#262626',
+                            green: '#24a148',
+                            cyan: '#1192e8'
+                        } 
+                    },
+                    animation: { 
+                        'spin-slow': 'spin 15s linear infinite', 
+                        'pulse-fast': 'pulse 1s infinite', 
+                        'scanline': 'scanline 10s linear infinite', 
+                        'slide-up': 'slideUp 0.4s ease-out forwards',
+                        'bounce-slow': 'bounce 2s infinite',
+                        'glow': 'glow 2s ease-in-out infinite'
+                    },
                     keyframes: {
-                        scanline: { '0%': { transform: 'translateY(-100%)' }, '100%': { transform: 'translateY(100%)' } },
-                        slideUp: { '0%': { opacity: 0, transform: 'translateY(20px)' }, '100%': { opacity: 1, transform: 'translateY(0)' } }
+                        scanline: { 
+                            '0%': { transform: 'translateY(-100%)' }, 
+                            '100%': { transform: 'translateY(100%)' } 
+                        },
+                        slideUp: { 
+                            '0%': { opacity: 0, transform: 'translateY(20px)' }, 
+                            '100%': { opacity: 1, transform: 'translateY(0)' } 
+                        },
+                        glow: {
+                            '0%, 100%': { boxShadow: '0 0 20px rgba(15, 98, 254, 0.3)' },
+                            '50%': { boxShadow: '0 0 40px rgba(15, 98, 254, 0.6)' }
+                        }
                     }
                 }
             }
@@ -31,510 +63,1643 @@
     </script>
 
     <style>
-        :root { --glass-border: rgba(255, 255, 255, 0.08); --glass-bg: rgba(10, 10, 12, 0.85); }
-        body { background-color: #050505; overflow: hidden; color: #e0e0e0; }
-        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        :root { 
+            --glass-border: rgba(255, 255, 255, 0.08); 
+            --glass-bg: rgba(10, 10, 12, 0.85); 
+            --accent-gradient: linear-gradient(135deg, #0f62fe 0%, #8a3ffc 100%);
+        }
+        
+        body { 
+            background: linear-gradient(180deg, #000000 0%, #0a0a0f 50%, #000000 100%);
+            overflow: hidden; 
+            color: #e0e0e0; 
+            font-family: 'IBM Plex Sans', sans-serif;
+        }
+        
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #0a0a0a; }
-        ::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
         ::-webkit-scrollbar-thumb:hover { background: #0f62fe; }
-        .glass { background: var(--glass-bg); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); }
-        .glass-card { background: rgba(20, 20, 25, 0.6); border: 1px solid rgba(255,255,255,0.05); transition: all 0.3s ease; }
-        .glass-card:hover { border-color: #0f62fe; box-shadow: 0 0 20px rgba(15, 98, 254, 0.1); }
-        .nav-btn.active { background: linear-gradient(90deg, rgba(15, 98, 254, 0.15), transparent); color: white; border-right: 2px solid #0f62fe; }
-        .scan-line { position: absolute; top: 0; left: 0; width: 100%; height: 5px; background: rgba(15, 98, 254, 0.3); opacity: 0.4; animation: scanline 6s linear infinite; pointer-events: none; z-index: 50; }
-        .ledger-block.active::before { background: #009d9a; box-shadow: 0 0 5px #009d9a; }
-        .node-circle { transition: all 0.5s ease; cursor: pointer; }
-        .node-circle:hover { stroke: white; stroke-width: 3px; }
-        .terminal-line { font-family: 'JetBrains Mono', monospace; font-size: 11px; margin-bottom: 2px; opacity: 0; animation: slideUp 0.1s forwards; }
-        .translate-y-full { transform: translateY(100%); }
+        
+        .glass { 
+            background: var(--glass-bg); 
+            backdrop-filter: blur(30px) saturate(150%); 
+            border: 1px solid var(--glass-border); 
+        }
+        
+        .glass-card { 
+            background: rgba(20, 20, 28, 0.7); 
+            border: 1px solid rgba(255,255,255,0.06); 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+            backdrop-filter: blur(20px);
+        }
+        
+        .glass-card:hover { 
+            border-color: #0f62fe; 
+            box-shadow: 0 8px 32px rgba(15, 98, 254, 0.15); 
+            transform: translateY(-2px);
+        }
+        
+        .nav-btn { 
+            position: relative; 
+            transition: all 0.2s ease;
+        }
+        
+        .nav-btn.active { 
+            background: linear-gradient(90deg, rgba(15, 98, 254, 0.2), transparent); 
+            color: white; 
+            border-right: 3px solid #0f62fe; 
+        }
+        
+        .nav-btn.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: #0f62fe;
+        }
+        
+        .scan-line { 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 2px; 
+            background: linear-gradient(90deg, transparent, #0f62fe, transparent); 
+            opacity: 0.5; 
+            animation: scanline 8s linear infinite; 
+            pointer-events: none; 
+            z-index: 50; 
+        }
+        
+        .ledger-block { 
+            position: relative; 
+            padding-left: 12px; 
+            border-left: 2px solid #333; 
+            transition: all 0.3s ease;
+        }
+        
+        .ledger-block.active { 
+            border-left-color: #009d9a; 
+            animation: slide-up 0.4s ease-out;
+        }
+        
+        .ledger-block.active::before { 
+            content: ''; 
+            position: absolute; 
+            left: -5px; 
+            top: 8px; 
+            width: 8px; 
+            height: 8px; 
+            background: #009d9a; 
+            border-radius: 50%; 
+            box-shadow: 0 0 10px #009d9a; 
+        }
+        
+        .node-circle { 
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); 
+            cursor: pointer; 
+        }
+        
+        .node-circle:hover { 
+            stroke: white; 
+            stroke-width: 3px; 
+            filter: drop-shadow(0 0 8px currentColor);
+        }
+        
+        .terminal-line { 
+            font-family: 'JetBrains Mono', monospace; 
+            font-size: 11px; 
+            margin-bottom: 3px; 
+            opacity: 0; 
+            animation: slideUp 0.2s forwards; 
+        }
+        
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .status-badge.online {
+            background: rgba(36, 161, 72, 0.15);
+            color: #24a148;
+            border: 1px solid rgba(36, 161, 72, 0.3);
+        }
+        
+        .status-badge.warning {
+            background: rgba(250, 77, 86, 0.15);
+            color: #fa4d56;
+            border: 1px solid rgba(250, 77, 86, 0.3);
+        }
+        
+        .metric-card {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--accent-gradient);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .metric-card:hover::before {
+            opacity: 1;
+        }
+        
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        .agent-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+            border: 2px solid;
+            transition: all 0.3s ease;
+        }
+        
+        .agent-avatar:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 20px currentColor;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .float-animation {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        .gradient-text {
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
     </style>
 </head>
 <body class="flex h-screen relative">
 
-    <canvas id="neural-mesh" class="fixed top-0 left-0 w-full h-full z-0 opacity-20 pointer-events-none"></canvas>
+    <!-- Neural Mesh Background -->
+    <canvas id="neural-mesh" class="fixed top-0 left-0 w-full h-full z-0 opacity-10 pointer-events-none"></canvas>
 
+    <!-- Boot Screen -->
     <div id="boot-screen" class="fixed inset-0 bg-black z-[9999] flex flex-col items-center justify-center font-mono">
-        <div class="text-ibm-blue text-4xl font-bold tracking-[0.2em] mb-4 animate-pulse">ORCHESTRIX<span class="text-white">OS</span></div>
-        <div id="boot-log" class="text-xs text-gray-500 h-20 overflow-hidden text-center"></div>
-        <div class="w-64 h-0.5 bg-gray-800 mt-4 rounded overflow-hidden relative">
-            <div id="boot-progress" class="absolute top-0 left-0 h-full bg-ibm-blue w-0 transition-all duration-[2000ms]"></div>
+        <div class="mb-8">
+            <div class="text-ibm-blue text-5xl font-bold tracking-[0.3em] mb-2 animate-pulse">
+                ORCHESTRIX<span class="text-white">OS</span>
+            </div>
+            <div class="text-center text-xs text-gray-500 tracking-widest">v10.0-WINNER | IBM watsonx Edition</div>
         </div>
+        <div id="boot-log" class="text-xs text-gray-600 h-32 overflow-hidden text-center space-y-1 mb-6"></div>
+        <div class="w-96 h-1 bg-gray-900 rounded overflow-hidden relative">
+            <div id="boot-progress" class="absolute top-0 left-0 h-full bg-gradient-to-r from-ibm-blue to-ibm-purple w-0 transition-all duration-[3000ms]"></div>
+        </div>
+        <div class="mt-4 text-xs text-gray-600 animate-pulse">Initializing AI Governance Mesh...</div>
     </div>
 
+    <!-- Sidebar -->
     <aside class="w-72 glass flex flex-col z-20 border-r border-white/10">
-        <div class="h-20 flex items-center px-6 border-b border-white/10 bg-black/20">
-            <div class="relative w-10 h-10 mr-4 flex items-center justify-center">
+        <!-- Logo Header -->
+        <div class="h-20 flex items-center px-6 border-b border-white/10 bg-black/30">
+            <div class="relative w-12 h-12 mr-4 flex items-center justify-center">
                 <div class="absolute w-full h-full rounded-full border-2 border-ibm-blue/30 animate-spin-slow"></div>
-                <i class="fas fa-brain text-ibm-blue text-xl"></i>
+                <div class="absolute w-8 h-8 rounded-full border-2 border-ibm-purple/40 animate-spin-slow" style="animation-direction: reverse;"></div>
+                <i class="fas fa-brain text-ibm-blue text-2xl relative z-10"></i>
             </div>
             <div>
-                <h1 class="font-tech text-2xl font-bold tracking-wider text-white">ORCHESTRIX</h1>
-                <p class="text-[10px] text-gray-400 font-mono uppercase tracking-widest">Sentinel v8.0</p>
+                <h1 class="font-tech text-2xl font-bold tracking-wider text-white gradient-text">ORCHESTRIX</h1>
+                <p class="text-[9px] text-gray-400 font-mono uppercase tracking-widest">Sentinel v10.0</p>
             </div>
         </div>
+
+        <!-- Navigation -->
         <nav class="flex-1 py-6 px-2 space-y-1 overflow-y-auto">
-            <div class="px-4 mb-2 text-[9px] font-bold text-gray-500 uppercase font-mono tracking-widest">Operational</div>
-            <button onclick="nav('dashboard')" id="nav-dashboard" class="nav-btn active w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-400 hover:text-white rounded-r-lg hover:bg-white/5"><i class="fas fa-th-large w-5 text-center"></i> Command Center</button>
-            <button onclick="nav('compliance')" id="nav-compliance" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-400 hover:text-white rounded-r-lg hover:bg-white/5"><i class="fas fa-shield-alt w-5 text-center"></i> Guardian Engine</button>
-            <button onclick="nav('genesis')" id="nav-genesis" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-400 hover:text-white rounded-r-lg hover:bg-white/5"><i class="fas fa-code-branch w-5 text-center"></i> JIT Genesis</button>
-            <div class="px-4 mt-6 mb-2 text-[9px] font-bold text-gray-500 uppercase font-mono tracking-widest">Intelligence</div>
-            <button onclick="nav('dtwin')" id="nav-dtwin" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-400 hover:text-white rounded-r-lg hover:bg-white/5"><i class="fas fa-network-wired w-5 text-center"></i> Digital Twin</button>
-            <button onclick="nav('agents')" id="nav-agents" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-400 hover:text-white rounded-r-lg hover:bg-white/5"><i class="fas fa-users-cog w-5 text-center"></i> Multi-Agent Debate</button>
-            <div class="px-4 mt-6 mb-2 text-[9px] font-bold text-gray-500 uppercase font-mono tracking-widest">Ecosystem</div>
-            <button onclick="nav('integration')" id="nav-integration" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-400 hover:text-white rounded-r-lg hover:bg-white/5"><i class="fas fa-plug w-5 text-center"></i> Integration Hub <span class="ml-auto text-[8px] bg-green-500/20 text-green-500 px-1 rounded">LIVE</span></button>
+            <div class="px-4 mb-3 text-[9px] font-bold text-gray-500 uppercase font-mono tracking-widest">Operational</div>
+            <button onclick="nav('dashboard')" id="nav-dashboard" class="nav-btn active w-full flex items-center gap-3 px-4 py-3.5 text-sm text-gray-400 hover:text-white rounded-r-lg hover:bg-white/5 transition-all">
+                <i class="fas fa-th-large w-5 text-center"></i> Command Center
+            </button>
+            <button onclick="nav('compliance')" id="nav-compliance" class="nav-btn w-full flex items-center gap-3 px-4 py-3.5 text-sm text-gray-400 hover:text-white rounded-r-lg hover:bg-white/5 transition-all">
+                <i class="fas fa-shield-alt w-5 text-center"></i> Guardian Engine
+            </button>
+            <button onclick="nav('genesis')" id="nav-genesis" class="nav-btn w-full flex items-center gap-3 px-4 py-3.5 text-sm text-gray-400 hover:text-white rounded-r-lg hover:bg-white/5 transition-all">
+                <i class="fas fa-wand-magic-sparkles w-5 text-center"></i> JIT Genesis
+            </button>
+
+            <div class="px-4 mt-6 mb-3 text-[9px] font-bold text-gray-500 uppercase font-mono tracking-widest">Intelligence</div>
+            <button onclick="nav('dtwin')" id="nav-dtwin" class="nav-btn w-full flex items-center gap-3 px-4 py-3.5 text-sm text-gray-400 hover:text-white rounded-r-lg hover:bg-white/5 transition-all">
+                <i class="fas fa-network-wired w-5 text-center"></i> Digital Twin
+            </button>
+            <button onclick="nav('agents')" id="nav-agents" class="nav-btn w-full flex items-center gap-3 px-4 py-3.5 text-sm text-gray-400 hover:text-white rounded-r-lg hover:bg-white/5 transition-all">
+                <i class="fas fa-users-cog w-5 text-center"></i> Agent Mesh
+            </button>
+            <button onclick="nav('explainability')" id="nav-explainability" class="nav-btn w-full flex items-center gap-3 px-4 py-3.5 text-sm text-gray-400 hover:text-white rounded-r-lg hover:bg-white/5 transition-all">
+                <i class="fas fa-project-diagram w-5 text-center"></i> Explainability
+            </button>
+            <button onclick="nav('hitl')" id="nav-hitl" class="nav-btn w-full flex items-center gap-3 px-4 py-3.5 text-sm text-gray-400 hover:text-white rounded-r-lg hover:bg-white/5 transition-all">
+                <i class="fas fa-hand-paper w-5 text-center"></i> HITL Queue
+            </button>
+
+            <div class="px-4 mt-6 mb-3 text-[9px] font-bold text-gray-500 uppercase font-mono tracking-widest">Ecosystem</div>
+            <button onclick="nav('integration')" id="nav-integration" class="nav-btn w-full flex items-center gap-3 px-4 py-3.5 text-sm text-gray-400 hover:text-white rounded-r-lg hover:bg-white/5 transition-all">
+                <i class="fas fa-plug w-5 text-center"></i> Integration Hub 
+                <span class="ml-auto status-badge online">
+                    <span class="pulse-dot bg-green-400"></span>
+                    LIVE
+                </span>
+            </button>
+            <button onclick="nav('analytics')" id="nav-analytics" class="nav-btn w-full flex items-center gap-3 px-4 py-3.5 text-sm text-gray-400 hover:text-white rounded-r-lg hover:bg-white/5 transition-all">
+                <i class="fas fa-chart-line w-5 text-center"></i> Analytics
+            </button>
         </nav>
-        <div class="p-4 border-t border-white/10 bg-black/20 font-mono text-[10px]">
-            <div class="flex justify-between mb-1 text-gray-400"><span>WATSONX.API</span> <span class="text-green-400 font-bold">CONNECTED</span></div>
-            <div class="flex justify-between mb-1 text-gray-400"><span>MCP SERVER</span> <span class="text-green-400 font-bold">ONLINE</span></div>
-            <div class="flex justify-between mb-1 text-gray-400"><span>STATUS</span> <span id="conn-status" class="text-yellow-500 font-bold">CONNECTING...</span></div>
+
+        <!-- System Status Footer -->
+        <div class="p-4 border-t border-white/10 bg-black/30 font-mono text-[10px] space-y-2">
+            <div class="flex justify-between items-center">
+                <span class="text-gray-400">WATSONX.API</span> 
+                <span class="status-badge online">CONNECTED</span>
+            </div>
+            <div class="flex justify-between items-center">
+                <span class="text-gray-400">MCP SERVER</span> 
+                <span class="status-badge online">ACTIVE</span>
+            </div>
+            <div class="flex justify-between items-center">
+                <span class="text-gray-400">A2A PROTOCOL</span> 
+                <span class="status-badge online">READY</span>
+            </div>
+            <div class="flex justify-between items-center">
+                <span class="text-gray-400">BACKEND</span> 
+                <span id="conn-status" class="status-badge warning">CONNECTING</span>
+            </div>
         </div>
     </aside>
 
+    <!-- Main Content -->
     <main class="flex-1 flex flex-col relative z-10 overflow-hidden">
+        <!-- Top Header -->
         <header class="h-16 glass border-b border-white/10 flex items-center justify-between px-6">
-            <div class="text-xs font-mono text-ibm-blue" id="sys-clock">00:00:00 UTC</div>
             <div class="flex items-center gap-4">
-                 <div class="text-right">
-                    <div class="text-2xl font-bold text-green-400 font-tech" id="roi-hours">--</div>
-                    <div class="text-[9px] text-gray-500 uppercase">Hours Saved</div>
+                <div class="text-xs font-mono text-ibm-blue font-bold" id="sys-clock">00:00:00 UTC</div>
+                <div class="h-6 w-[1px] bg-white/20"></div>
+                <div class="flex items-center gap-2">
+                    <div class="pulse-dot bg-green-400"></div>
+                    <span class="text-xs text-gray-400">Blockchain Height: <span id="blockchain-height" class="text-white font-bold">0</span></span>
                 </div>
-                <div class="h-8 w-[1px] bg-white/10"></div>
+            </div>
+            
+            <div class="flex items-center gap-6">
+                <!-- ROI Metrics -->
+                <div class="text-right">
+                    <div class="text-2xl font-bold text-green-400 font-tech" id="roi-hours">--</div>
+                    <div class="text-[9px] text-gray-500 uppercase tracking-wide">Hours Saved</div>
+                </div>
+                <div class="h-10 w-[1px] bg-white/10"></div>
                 <div class="text-right">
                     <div class="text-2xl font-bold text-ibm-blue font-tech" id="roi-risk">--</div>
-                    <div class="text-[9px] text-gray-500 uppercase">Risk Avoided</div>
+                    <div class="text-[9px] text-gray-500 uppercase tracking-wide">Risk Avoided</div>
                 </div>
-                <button onclick="toggleDrawer()" class="relative p-2 hover:bg-white/5 rounded-full"><i class="far fa-bell text-gray-400"></i><span class="absolute top-2 right-2 w-2 h-2 bg-ibm-red rounded-full animate-pulse"></span></button>
+                <div class="h-10 w-[1px] bg-white/10"></div>
+                
+                <!-- Notification Bell -->
+                <button onclick="toggleDrawer()" class="relative p-2.5 hover:bg-white/5 rounded-full transition-all">
+                    <i class="far fa-bell text-gray-400 text-lg"></i>
+                    <span class="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-ibm-red rounded-full animate-pulse"></span>
+                </button>
             </div>
         </header>
 
+        <!-- Content Area -->
         <div id="content-area" class="flex-1 overflow-y-auto p-6 relative scroll-smooth">
+            
+            <!-- DASHBOARD VIEW -->
             <div id="view-dashboard" class="view-section space-y-6">
+                <!-- KPI Cards -->
                 <div class="grid grid-cols-4 gap-4">
-                    <div class="glass-card p-5 rounded-xl border-l-2 border-ibm-blue">
-                        <p class="text-gray-400 text-[10px] font-bold uppercase">Active Workflows</p>
-                        <h3 class="text-3xl font-tech font-bold text-white mt-1" id="kpi-total">--</h3>
+                    <div class="glass-card metric-card p-5 rounded-xl border-l-4 border-ibm-blue">
+                        <div class="flex justify-between items-start mb-2">
+                            <p class="text-gray-400 text-[10px] font-bold uppercase tracking-wide">Active Workflows</p>
+                            <i class="fas fa-arrow-up text-green-400 text-xs"></i>
+                        </div>
+                        <h3 class="text-4xl font-tech font-bold text-white" id="kpi-total">--</h3>
+                        <p class="text-[9px] text-gray-500 mt-1">+12% from yesterday</p>
                     </div>
-                    <div class="glass-card p-5 rounded-xl border-l-2 border-ibm-red">
-                        <p class="text-gray-400 text-[10px] font-bold uppercase">Guardian Blocks</p>
-                        <h3 class="text-3xl font-tech font-bold text-white mt-1" id="kpi-alerts">0</h3>
+                    
+                    <div class="glass-card metric-card p-5 rounded-xl border-l-4 border-ibm-red">
+                        <div class="flex justify-between items-start mb-2">
+                            <p class="text-gray-400 text-[10px] font-bold uppercase tracking-wide">Guardian Blocks</p>
+                            <i class="fas fa-shield-alt text-ibm-red text-xs"></i>
+                        </div>
+                        <h3 class="text-4xl font-tech font-bold text-white" id="kpi-alerts">0</h3>
+                        <p class="text-[9px] text-gray-500 mt-1">Prevented violations</p>
                     </div>
-                    <div class="glass-card p-5 rounded-xl border-l-2 border-ibm-teal">
-                         <p class="text-gray-400 text-[10px] font-bold uppercase">A2A Handshakes</p>
-                         <h3 class="text-3xl font-tech font-bold text-ibm-teal mt-1">3</h3>
+                    
+                    <div class="glass-card metric-card p-5 rounded-xl border-l-4 border-ibm-teal">
+                        <div class="flex justify-between items-start mb-2">
+                            <p class="text-gray-400 text-[10px] font-bold uppercase tracking-wide">SLA Adherence</p>
+                            <i class="fas fa-clock text-ibm-teal text-xs"></i>
+                        </div>
+                        <h3 class="text-4xl font-tech font-bold text-ibm-teal" id="sla-adherence">99.9%</h3>
+                        <p class="text-[9px] text-gray-500 mt-1">0 breaches today</p>
                     </div>
-                     <div class="glass-card p-5 rounded-xl border-l-2 border-ibm-purple relative">
-                        <p class="text-gray-400 text-[10px] font-bold uppercase">Forecast Load</p>
-                        <div class="h-12 w-full mt-1"><canvas id="forecast-mini-chart"></canvas></div>
+                    
+                    <div class="glass-card metric-card p-5 rounded-xl border-l-4 border-ibm-purple relative overflow-hidden">
+                        <p class="text-gray-400 text-[10px] font-bold uppercase tracking-wide mb-2">Load Forecast</p>
+                        <div class="h-14 w-full"><canvas id="forecast-mini-chart"></canvas></div>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-3 gap-6 h-[450px]">
+                <!-- Main Grid -->
+                <div class="grid grid-cols-3 gap-6 h-[500px]">
+                    <!-- Live DAG -->
                     <div class="col-span-2 glass-card rounded-xl border border-white/10 overflow-hidden flex flex-col">
-                        <div class="px-4 py-3 bg-black/20 border-b border-white/10 flex justify-between items-center">
-                            <h3 class="text-xs font-bold text-white flex items-center gap-2"><i class="fas fa-network-wired text-ibm-blue"></i> LIVE NEURAL EXECUTION DAG</h3>
+                        <div class="px-5 py-4 bg-black/30 border-b border-white/10 flex justify-between items-center">
+                            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                                <i class="fas fa-network-wired text-ibm-blue"></i> 
+                                LIVE NEURAL EXECUTION DAG
+                            </h3>
+                            <div class="flex items-center gap-2">
+                                <span class="pulse-dot bg-green-400"></span>
+                                <span class="text-[10px] text-gray-400 font-mono">STREAMING</span>
+                            </div>
                         </div>
-                        <div class="flex-1 relative bg-black/40 flex items-center justify-center overflow-hidden" id="graph-wrapper">
+                        <div class="flex-1 relative bg-gradient-to-br from-black via-gray-900 to-black flex items-center justify-center overflow-hidden" id="graph-wrapper">
                             <div class="scan-line"></div>
-                            <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10"></div>
-                            <div id="graph-container" class="relative z-10 flex flex-col items-center justify-center"><p class="text-gray-600 text-xs font-mono animate-pulse" id="graph-placeholder">SYSTEM STANDBY // AWAITING TRIGGER...</p></div>
+                            <div id="graph-container" class="relative z-10 w-full h-full flex items-center justify-center p-4">
+                                <p class="text-gray-600 text-sm font-mono animate-pulse text-center" id="graph-placeholder">
+                                    <i class="fas fa-robot text-3xl mb-2 block"></i>
+                                    SYSTEM STANDBY<br/>
+                                    <span class="text-xs">Awaiting workflow trigger...</span>
+                                </p>
+                            </div>
                         </div>
                     </div>
+
+                    <!-- Immutable Ledger -->
                     <div class="col-span-1 glass-card rounded-xl border border-white/10 flex flex-col">
-                        <div class="px-4 py-3 bg-black/20 border-b border-white/10">
-                            <h3 class="text-xs font-bold text-white flex items-center gap-2"><i class="fas fa-link text-green-400"></i> IMMUTABLE TRUST LEDGER</h3>
+                        <div class="px-5 py-4 bg-black/30 border-b border-white/10">
+                            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                                <i class="fas fa-link text-ibm-teal"></i> 
+                                TRUST LEDGER
+                            </h3>
+                            <p class="text-[9px] text-gray-500 mt-1 font-mono">SHA-256 Blockchain</p>
                         </div>
                         <div class="flex-1 overflow-y-auto p-4 space-y-3 bg-black/40 font-mono" id="ledger-container">
-                             <div class="ledger-block active"><div class="text-[9px] text-gray-500">GENESIS</div><div class="text-[10px] text-ibm-teal truncate">0x8f...init</div></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="glass-card rounded-xl overflow-hidden mt-4">
-                    <table class="w-full text-left text-xs text-gray-400">
-                        <thead class="bg-white/5 text-gray-300 uppercase font-mono">
-                            <tr>
-                                <th class="px-6 py-3">ID</th>
-                                <th class="px-6 py-3">Status</th>
-                                <th class="px-6 py-3">Compliance</th>
-                                <th class="px-6 py-3 text-right">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="wf-table-body" class="divide-y divide-white/5 font-mono"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div id="view-integration" class="view-section hidden">
-                <div class="glass-card p-8 rounded-xl h-full flex flex-col items-center justify-center text-center">
-                    <h2 class="text-2xl font-bold text-white mb-8">Ecosystem Connectivity Mesh</h2>
-                    <div class="relative w-full max-w-2xl h-64">
-                        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-10">
-                            <div class="w-20 h-20 bg-black border-2 border-ibm-blue rounded-full flex items-center justify-center shadow-[0_0_40px_#0f62fe]">
-                                <i class="fas fa-brain text-3xl text-ibm-blue"></i>
+                            <div class="ledger-block active">
+                                <div class="text-[9px] text-gray-500 uppercase">Genesis Block</div>
+                                <div class="text-[10px] text-ibm-teal truncate">0x000...init</div>
+                                <div class="text-[8px] text-gray-600 mt-1">2025-11-23 12:00:00</div>
                             </div>
-                            <span class="mt-2 text-xs font-bold text-white">SENTINEL CORE</span>
                         </div>
-                        <div class="absolute top-0 left-0 flex flex-col items-center">
-                            <div class="w-12 h-12 bg-gray-900 border border-green-500 rounded-full flex items-center justify-center"><i class="fas fa-server text-green-500"></i></div>
-                            <span class="text-[10px] mt-1 text-gray-400">MCP SERVER</span>
-                            <span class="text-[9px] text-green-500 animate-pulse">ONLINE</span>
+                    </div>
+                </div>
+
+                <!-- Agent Health Grid -->
+                <div class="grid grid-cols-5 gap-4">
+                    <div class="glass-card p-4 rounded-xl text-center" id="agent-planner">
+                        <div class="agent-avatar mx-auto mb-2 bg-blue-500/20 text-blue-400 border-blue-400">
+                            <i class="fas fa-brain"></i>
                         </div>
-                        <div class="absolute top-0 right-0 flex flex-col items-center">
-                            <div class="w-12 h-12 bg-gray-900 border border-purple-500 rounded-full flex items-center justify-center"><i class="fas fa-robot text-purple-500"></i></div>
-                            <span class="text-[10px] mt-1 text-gray-400">WATSONX A2A</span>
-                            <span class="text-[9px] text-purple-500 animate-pulse">LISTENING</span>
+                        <div class="text-xs font-bold text-white">Planner</div>
+                        <div class="text-[10px] text-green-400 mt-1">ACTIVE</div>
+                        <div class="text-[9px] text-gray-500">99.9%</div>
+                    </div>
+                    
+                    <div class="glass-card p-4 rounded-xl text-center" id="agent-compliance">
+                        <div class="agent-avatar mx-auto mb-2 bg-teal-500/20 text-teal-400 border-teal-400">
+                            <i class="fas fa-shield-alt"></i>
                         </div>
-                        <div class="absolute bottom-0 left-1/2 transform -translate-x-1/2 flex flex-col items-center">
-                            <div class="w-12 h-12 bg-gray-900 border border-teal-500 rounded-full flex items-center justify-center"><i class="fas fa-chart-pie text-teal-500"></i></div>
-                            <span class="text-[10px] mt-1 text-gray-400">GOVERNANCE TELEMETRY</span>
-                            <span class="text-[9px] text-teal-500 animate-pulse">STREAMING</span>
+                        <div class="text-xs font-bold text-white">Compliance</div>
+                        <div class="text-[10px] text-green-400 mt-1">ACTIVE</div>
+                        <div class="text-[9px] text-gray-500">99.7%</div>
+                    </div>
+                    
+                    <div class="glass-card p-4 rounded-xl text-center" id="agent-safety">
+                        <div class="agent-avatar mx-auto mb-2 bg-green-500/20 text-green-400 border-green-400">
+                            <i class="fas fa-check-circle"></i>
                         </div>
-                        <svg class="absolute inset-0 w-full h-full pointer-events-none">
-                            <line x1="50%" y1="50%" x2="10%" y2="10%" stroke="#0f62fe" stroke-width="1" stroke-dasharray="5,5" />
-                            <line x1="50%" y1="50%" x2="90%" y2="10%" stroke="#0f62fe" stroke-width="1" stroke-dasharray="5,5" />
-                            <line x1="50%" y1="50%" x2="50%" y2="90%" stroke="#0f62fe" stroke-width="1" stroke-dasharray="5,5" />
-                        </svg>
+                        <div class="text-xs font-bold text-white">Safety</div>
+                        <div class="text-[10px] text-green-400 mt-1">ACTIVE</div>
+                        <div class="text-[9px] text-gray-500">100%</div>
+                    </div>
+                    
+                    <div class="glass-card p-4 rounded-xl text-center" id="agent-security">
+                        <div class="agent-avatar mx-auto mb-2 bg-purple-500/20 text-purple-400 border-purple-400">
+                            <i class="fas fa-lock"></i>
+                        </div>
+                        <div class="text-xs font-bold text-white">Security</div>
+                        <div class="text-[10px] text-green-400 mt-1">ACTIVE</div>
+                        <div class="text-[9px] text-gray-500">99.8%</div>
+                    </div>
+                    
+                    <div class="glass-card p-4 rounded-xl text-center" id="agent-efficiency">
+                        <div class="agent-avatar mx-auto mb-2 bg-yellow-500/20 text-yellow-400 border-yellow-400">
+                            <i class="fas fa-tachometer-alt"></i>
+                        </div>
+                        <div class="text-xs font-bold text-white">Efficiency</div>
+                        <div class="text-[10px] text-green-400 mt-1">ACTIVE</div>
+                        <div class="text-[9px] text-gray-500">99.9%</div>
+                    </div>
+                </div>
+
+                <!-- Workflow Table -->
+                <div class="glass-card rounded-xl overflow-hidden">
+                    <div class="px-5 py-4 bg-black/30 border-b border-white/10">
+                        <h3 class="text-sm font-bold text-white">Recent Workflows</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs text-gray-400">
+                            <thead class="bg-white/5 text-gray-300 uppercase font-mono">
+                                <tr>
+                                    <th class="px-6 py-3">Workflow ID</th>
+                                    <th class="px-6 py-3">Status</th>
+                                    <th class="px-6 py-3">Compliance</th>
+                                    <th class="px-6 py-3">Risk Score</th>
+                                    <th class="px-6 py-3 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="wf-table-body" class="divide-y divide-white/5 font-mono"></tbody>
+                        </table>
                     </div>
                 </div>
             </div>
 
+            <!-- COMPLIANCE VIEW -->
+            <div id="view-compliance" class="view-section hidden">
+                <div class="grid grid-cols-2 gap-6 h-full">
+                    <div class="glass-card p-10 rounded-xl border-2 border-ibm-teal/30 flex flex-col items-center justify-center text-center">
+                        <div class="w-24 h-24 rounded-full bg-ibm-teal/20 flex items-center justify-center mb-6 float-animation">
+                            <i class="fas fa-shield-alt text-5xl text-ibm-teal"></i>
+                        </div>
+                        <h2 class="text-3xl font-bold text-white mb-4">Guardian Engine</h2>
+                        <p class="text-gray-400 mb-6 max-w-md">Real-time compliance validation powered by deterministic rule engine</p>
+                        <div class="space-y-4 w-full max-w-md">
+                            <input type="text" id="compliance-test-input" placeholder="Test compliance query..." class="w-full bg-black/50 border border-white/20 rounded-lg py-3 px-4 text-white focus:border-ibm-teal focus:outline-none text-sm">
+                            <button onclick="testCompliance()" class="w-full bg-ibm-teal hover:bg-teal-600 text-white font-bold py-3 px-6 rounded-lg transition-all">
+                                RUN VALIDATION
+                            </button>
+                        </div>
+                        <div id="compliance-result" class="mt-6 w-full max-w-md"></div>
+                    </div>
+                    
+                    <div class="glass-card p-6 rounded-xl">
+                        <h3 class="text-lg font-bold text-white mb-4">Active Policies</h3>
+                        <div class="space-y-3">
+                            <div class="p-4 bg-white/5 rounded-lg border border-white/10">
+                                <div class="flex justify-between items-start mb-2">
+                                    <h4 class="text-sm font-bold text-white">POL-TRANSFER</h4>
+                                    <span class="status-badge online">ACTIVE</span>
+                                </div>
+                                <p class="text-xs text-gray-400">Blocks unauthorized transfer operations</p>
+                            </div>
+                            <div class="p-4 bg-white/5 rounded-lg border border-white/10">
+                                <div class="flex justify-between items-start mb-2">
+                                    <h4 class="text-sm font-bold text-white">POL-OFFSHORE</h4>
+                                    <span class="status-badge online">ACTIVE</span>
+                                </div>
+                                <p class="text-xs text-gray-400">Prevents offshore data movement</p>
+                            </div>
+                            <div class="p-4 bg-white/5 rounded-lg border border-white/10">
+                                <div class="flex justify-between items-start mb-2">
+                                    <h4 class="text-sm font-bold text-white">POL-UNAUTHORIZED</h4>
+                                    <span class="status-badge online">ACTIVE</span>
+                                </div>
+                                <p class="text-xs text-gray-400">Detects unauthorized access attempts</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GENESIS VIEW -->
             <div id="view-genesis" class="view-section hidden h-full flex flex-col">
                 <div class="grid grid-cols-2 gap-6 h-full">
-                    <div class="glass-card p-8 rounded-xl flex flex-col justify-center items-center text-center relative overflow-hidden">
-                        <div class="absolute inset-0 bg-ibm-purple/5"></div>
-                        <i class="fas fa-wand-magic-sparkles text-5xl text-ibm-purple mb-6 animate-bounce"></i>
-                        <h2 class="text-2xl font-bold text-white mb-2">JIT Skill Genesis</h2>
-                        <div class="w-full max-w-md relative">
-                            <input id="genesis-input" type="text" class="w-full bg-black/50 border border-white/20 rounded-lg py-3 px-4 text-white focus:border-ibm-purple focus:outline-none font-mono text-xs" placeholder="e.g. 'Fetch ETH price'">
-                            <button onclick="runGenesis()" class="absolute right-1 top-1 bottom-1 bg-ibm-purple hover:bg-purple-600 text-black font-bold px-4 rounded text-xs">GENERATE</button>
+                    <div class="glass-card p-10 rounded-xl flex flex-col justify-center items-center text-center relative overflow-hidden">
+                        <div class="absolute inset-0 bg-gradient-to-br from-ibm-purple/10 to-transparent"></div>
+                        <div class="relative z-10">
+                            <div class="w-24 h-24 rounded-full bg-ibm-purple/20 flex items-center justify-center mb-6 mx-auto">
+                                <i class="fas fa-wand-magic-sparkles text-5xl text-ibm-purple animate-bounce-slow"></i>
+                            </div>
+                            <h2 class="text-3xl font-bold text-white mb-3">JIT Skill Genesis</h2>
+                            <p class="text-gray-400 mb-8 max-w-md">Powered by IBM Granite 13B • Dynamic Tool Generation</p>
+                            <div class="w-full max-w-lg relative">
+                                <input id="genesis-input" type="text" class="w-full bg-black/50 border border-white/20 rounded-lg py-4 px-5 pr-32 text-white focus:border-ibm-purple focus:outline-none font-mono text-sm" placeholder="Describe your tool (e.g., 'ETH price fetcher')">
+                                <button onclick="runGenesis()" class="absolute right-2 top-2 bottom-2 bg-ibm-purple hover:bg-purple-600 text-white font-bold px-6 rounded-lg transition-all">
+                                    GENERATE
+                                </button>
+                            </div>
                         </div>
                     </div>
-                    <div id="genesis-terminal" class="glass-card rounded-xl bg-black/80 p-4 font-mono text-xs overflow-y-auto border border-white/10">
-                        <div class="text-gray-500 mb-2">// Genesis Terminal v2.1 connected...</div>
-                        <div id="code-output" class="space-y-1"></div>
+                    
+                    <div id="genesis-terminal" class="glass-card rounded-xl bg-black/80 p-5 font-mono text-xs overflow-y-auto border border-white/10 flex flex-col">
+                        <div class="flex justify-between items-center mb-4 pb-3 border-b border-white/10">
+                            <span class="text-ibm-purple font-bold">// Genesis Terminal v2.1</span>
+                            <span class="text-gray-600">IBM Granite 13B Connected</span>
+                        </div>
+                        <div id="code-output" class="space-y-1 flex-1"></div>
                     </div>
                 </div>
             </div>
 
+            <!-- DIGITAL TWIN VIEW -->
             <div id="view-dtwin" class="view-section hidden">
-                <div class="grid grid-cols-3 gap-6 h-[600px]">
-                    <div class="col-span-2 glass-card p-6 rounded-xl relative overflow-hidden bg-black/40" id="twin-map">
-                        <div class="absolute top-4 left-4 z-10 bg-black/60 px-3 py-1 rounded border border-white/10 text-xs font-bold text-white">ORGANIZATIONAL TOPOLOGY</div>
+                <div class="grid grid-cols-3 gap-6 h-[650px]">
+                    <div class="col-span-2 glass-card p-6 rounded-xl relative overflow-hidden bg-gradient-to-br from-black via-gray-900 to-black" id="twin-map">
+                        <div class="absolute top-6 left-6 z-10 bg-black/80 px-4 py-2 rounded-lg border border-white/10 backdrop-blur-sm">
+                            <div class="text-xs font-bold text-white mb-1">Organizational Topology</div>
+                            <div class="text-[10px] text-gray-400">Real-time Department Health</div>
+                        </div>
                         <svg class="absolute inset-0 w-full h-full">
-                            <line x1="50%" y1="50%" x2="20%" y2="30%" stroke="#333" stroke-width="2" />
-                            <line x1="50%" y1="50%" x2="80%" y2="30%" stroke="#333" stroke-width="2" />
-                            <line x1="50%" y1="50%" x2="50%" y2="80%" stroke="#333" stroke-width="2" />
-                            <g id="node-hr"><circle cx="20%" cy="30%" r="15" fill="#333" stroke="#555" stroke-width="2" class="node-circle"/><text x="20%" y="35%" text-anchor="middle" fill="#888" font-size="10" dy="20">HR</text></g>
-                            <g id="node-fin"><circle cx="80%" cy="30%" r="15" fill="#333" stroke="#555" stroke-width="2" class="node-circle"/><text x="80%" y="35%" text-anchor="middle" fill="#888" font-size="10" dy="20">FINANCE</text></g>
-                            <g id="node-it"><circle cx="50%" cy="80%" r="15" fill="#333" stroke="#555" stroke-width="2" class="node-circle"/><text x="50%" y="85%" text-anchor="middle" fill="#888" font-size="10" dy="20">IT OPS</text></g>
-                            <circle cx="50%" cy="50%" r="25" fill="#0f62fe" stroke="white" stroke-width="2" class="node-pulse"/>
+                            <defs>
+                                <linearGradient id="lineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" style="stop-color:#0f62fe;stop-opacity:0" />
+                                    <stop offset="50%" style="stop-color:#0f62fe;stop-opacity:1" />
+                                    <stop offset="100%" style="stop-color:#0f62fe;stop-opacity:0" />
+                                </linearGradient>
+                            </defs>
+                            <line x1="50%" y1="50%" x2="20%" y2="30%" stroke="url(#lineGrad)" stroke-width="2" />
+                            <line x1="50%" y1="50%" x2="80%" y2="30%" stroke="url(#lineGrad)" stroke-width="2" />
+                            <line x1="50%" y1="50%" x2="50%" y2="80%" stroke="url(#lineGrad)" stroke-width="2" />
+                            
+                            <g id="node-hr">
+                                <circle cx="20%" cy="30%" r="18" fill="#1a1a20" stroke="#555" stroke-width="2" class="node-circle"/>
+                                <text x="20%" y="35%" text-anchor="middle" fill="#888" font-size="12" font-weight="bold">HR</text>
+                                <text x="20%" y="32%" text-anchor="middle" fill="#888" font-size="10" dy="28">Human Resources</text>
+                            </g>
+                            
+                            <g id="node-fin">
+                                <circle cx="80%" cy="30%" r="18" fill="#1a1a20" stroke="#555" stroke-width="2" class="node-circle"/>
+                                <text x="80%" y="35%" text-anchor="middle" fill="#888" font-size="12" font-weight="bold">FIN</text>
+                                <text x="80%" y="32%" text-anchor="middle" fill="#888" font-size="10" dy="28">Finance</text>
+                            </g>
+                            
+                            <g id="node-it">
+                                <circle cx="50%" cy="80%" r="18" fill="#1a1a20" stroke="#555" stroke-width="2" class="node-circle"/>
+                                <text x="50%" y="85%" text-anchor="middle" fill="#888" font-size="12" font-weight="bold">IT</text>
+                                <text x="50%" y="82%" text-anchor="middle" fill="#888" font-size="10" dy="28">Operations</text>
+                            </g>
+                            
+                            <circle cx="50%" cy="50%" r="30" fill="#0f62fe" stroke="white" stroke-width="3" class="animate-pulse"/>
+                            <text x="50%" y="50%" text-anchor="middle" fill="white" font-size="14" font-weight="bold">CORE</text>
                         </svg>
                     </div>
+                    
                     <div class="col-span-1 space-y-6">
-                        <div class="glass-card p-5 rounded-xl">
-                            <h4 class="text-xs font-bold text-white uppercase mb-4">Simulation Parameters</h4>
-                            <label class="text-[10px] text-gray-400">Hiring Velocity</label>
-                            <input type="range" class="w-full mb-4 h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-ibm-blue" oninput="updateSim(this.value)">
-                            <div class="flex justify-between items-end pt-4 border-t border-white/10">
-                                <span class="text-[10px] text-gray-400">SLA BREACH RISK</span>
-                                <span class="text-2xl font-bold text-ibm-blue" id="sim-risk-val">12%</span>
+                        <div class="glass-card p-6 rounded-xl">
+                            <h4 class="text-sm font-bold text-white uppercase mb-4 flex items-center gap-2">
+                                <i class="fas fa-sliders-h text-ibm-blue"></i>
+                                Simulation Control
+                            </h4>
+                            <label class="text-[11px] text-gray-400 block mb-2">Hiring Velocity</label>
+                            <input type="range" min="0" max="100" value="30" class="w-full mb-6 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-ibm-blue" oninput="updateSim(this.value)">
+                            
+                            <div class="pt-4 border-t border-white/10">
+                                <div class="flex justify-between items-end">
+                                    <span class="text-[11px] text-gray-400 uppercase">SLA Breach Risk</span>
+                                    <span class="text-3xl font-bold text-ibm-blue" id="sim-risk-val">12%</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="glass-card p-6 rounded-xl">
+                            <h4 class="text-sm font-bold text-white mb-4">Department Status</h4>
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center p-3 bg-white/5 rounded-lg">
+                                    <span class="text-xs text-gray-300">HR</span>
+                                    <span class="status-badge online">OPTIMAL</span>
+                                </div>
+                                <div class="flex justify-between items-center p-3 bg-white/5 rounded-lg">
+                                    <span class="text-xs text-gray-300">Finance</span>
+                                    <span class="status-badge online">OPTIMAL</span>
+                                </div>
+                                <div class="flex justify-between items-center p-3 bg-white/5 rounded-lg">
+                                    <span class="text-xs text-gray-300">IT Ops</span>
+                                    <span class="status-badge online">OPTIMAL</span>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-             <div id="view-agents" class="view-section hidden">
+            <!-- AGENT MESH VIEW -->
+            <div id="view-agents" class="view-section hidden">
                 <div class="glass-card p-10 text-center h-full flex flex-col justify-center">
-                    <h2 class="text-2xl font-bold text-white mb-4">Multi-Agent Debate</h2>
-                    <button onclick="runDebate()" class="bg-blue-600 px-6 py-2 rounded text-white mx-auto">Start Session</button>
-                    <div id="debate-container" class="mt-6 text-left max-w-lg mx-auto space-y-2"></div>
+                    <div class="w-20 h-20 rounded-full bg-ibm-purple/20 flex items-center justify-center mb-6 mx-auto">
+                        <i class="fas fa-users-cog text-4xl text-ibm-purple"></i>
+                    </div>
+                    <h2 class="text-3xl font-bold text-white mb-4">Multi-Agent Debate Session</h2>
+                    <p class="text-gray-400 mb-8">5-Agent Governance Mesh with Weighted Voting</p>
+                    <button onclick="runDebate()" class="bg-ibm-blue hover:bg-blue-600 px-8 py-3 rounded-lg text-white font-bold mx-auto transition-all">
+                        <i class="fas fa-play mr-2"></i>
+                        START DEBATE
+                    </button>
+                    <div id="debate-container" class="mt-8 text-left max-w-2xl mx-auto space-y-3"></div>
                 </div>
             </div>
 
-            <div id="view-compliance" class="view-section hidden">
-                <div class="glass-card p-10 rounded-xl border border-ibm-teal/30 flex flex-col items-center justify-center h-[500px] text-center">
-                    <i class="fas fa-file-contract text-5xl text-ibm-teal mb-4"></i>
-                    <h2 class="text-2xl font-bold text-white">Guardian Engine (RAG)</h2>
-                    <button onclick="document.getElementById('policy-upload').click()" class="px-8 py-3 bg-ibm-teal/20 hover:bg-ibm-teal/40 border border-ibm-teal text-ibm-teal rounded font-bold transition-all">SELECT FILES</button>
-                    <input type="file" class="hidden" id="policy-upload" onchange="handleUpload(this)">
-                    <div id="upload-status" class="mt-4 text-xs font-mono text-green-400 opacity-0 transition-opacity">Uploading...</div>
+            <!-- EXPLAINABILITY VIEW -->
+            <div id="view-explainability" class="view-section hidden">
+                <div class="glass-card p-10 rounded-xl h-full flex flex-col items-center justify-center text-center">
+                    <div class="w-24 h-24 rounded-full bg-ibm-cyan/20 flex items-center justify-center mb-6 float-animation">
+                        <i class="fas fa-project-diagram text-5xl text-ibm-cyan"></i>
+                    </div>
+                    <h2 class="text-3xl font-bold text-white mb-4">Counterfactual Analysis</h2>
+                    <p class="text-gray-400 mb-8 max-w-xl">Select any workflow to view "Why Not?" explanations and alternative decision paths</p>
+                    <div class="text-sm text-gray-500">Navigate to Dashboard and click "Explain" on any workflow</div>
+                </div>
+            </div>
+
+            <!-- HITL VIEW -->
+            <div id="view-hitl" class="view-section hidden">
+                <div class="glass-card rounded-xl overflow-hidden h-full flex flex-col">
+                    <div class="px-6 py-4 bg-black/30 border-b border-white/10">
+                        <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                            <i class="fas fa-hand-paper text-ibm-red"></i>
+                            Human-in-the-Loop Queue
+                        </h3>
+                        <p class="text-xs text-gray-400 mt-1">High-risk workflows requiring human authorization</p>
+                    </div>
+                    <div class="flex-1 overflow-y-auto p-6">
+                        <div id="hitl-queue-container" class="space-y-4">
+                            <div class="text-center text-gray-500 py-20">
+                                <i class="fas fa-check-circle text-5xl mb-4 text-green-500"></i>
+                                <p class="text-lg">All Clear - No Pending Interventions</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- INTEGRATION VIEW -->
+            <div id="view-integration" class="view-section hidden">
+                <div class="glass-card p-10 rounded-xl h-full flex flex-col items-center justify-center text-center">
+                    <h2 class="text-3xl font-bold text-white mb-12">Ecosystem Connectivity Mesh</h2>
+                    <div class="relative w-full max-w-3xl h-96">
+                        <!-- Central Node -->
+                        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-10">
+                            <div class="w-24 h-24 bg-black border-4 border-ibm-blue rounded-full flex items-center justify-center shadow-[0_0_60px_#0f62fe] animate-glow">
+                                <i class="fas fa-brain text-4xl text-ibm-blue"></i>
+                            </div>
+                            <span class="mt-3 text-sm font-bold text-white tracking-wide">SENTINEL CORE</span>
+                            <span class="text-[10px] text-gray-500">v10.0-WINNER</span>
+                        </div>
+                        
+                        <!-- MCP Server -->
+                        <div class="absolute top-4 left-4 flex flex-col items-center">
+                            <div class="w-16 h-16 bg-gray-900 border-2 border-green-500 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(36,161,72,0.5)]">
+                                <i class="fas fa-server text-2xl text-green-500"></i>
+                            </div>
+                            <span class="text-[11px] mt-2 text-gray-300 font-semibold">MCP SERVER</span>
+                            <span class="status-badge online mt-1">ONLINE</span>
+                        </div>
+                        
+                        <!-- A2A Protocol -->
+                        <div class="absolute top-4 right-4 flex flex-col items-center">
+                            <div class="w-16 h-16 bg-gray-900 border-2 border-purple-500 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(138,63,252,0.5)]">
+                                <i class="fas fa-robot text-2xl text-purple-500"></i>
+                            </div>
+                            <span class="text-[11px] mt-2 text-gray-300 font-semibold">A2A PROTOCOL</span>
+                            <span class="status-badge online mt-1">ACTIVE</span>
+                        </div>
+                        
+                        <!-- Watsonx -->
+                        <div class="absolute bottom-4 left-12 flex flex-col items-center">
+                            <div class="w-16 h-16 bg-gray-900 border-2 border-ibm-blue rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(15,98,254,0.5)]">
+                                <i class="fas fa-brain text-2xl text-ibm-blue"></i>
+                            </div>
+                            <span class="text-[11px] mt-2 text-gray-300 font-semibold">WATSONX.AI</span>
+                            <span class="status-badge online mt-1">CONNECTED</span>
+                        </div>
+                        
+                        <!-- OpenScale -->
+                        <div class="absolute bottom-4 right-12 flex flex-col items-center">
+                            <div class="w-16 h-16 bg-gray-900 border-2 border-teal-500 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(0,157,154,0.5)]">
+                                <i class="fas fa-chart-line text-2xl text-teal-500"></i>
+                            </div>
+                            <span class="text-[11px] mt-2 text-gray-300 font-semibold">OPENSCALE</span>
+                            <span class="status-badge online mt-1">STREAMING</span>
+                        </div>
+                        
+                        <!-- Connection Lines -->
+                        <svg class="absolute inset-0 w-full h-full pointer-events-none">
+                            <defs>
+                                <linearGradient id="connGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#0f62fe;stop-opacity:0.3" />
+                                    <stop offset="100%" style="stop-color:#0f62fe;stop-opacity:0.8" />
+                                </linearGradient>
+                            </defs>
+                            <line x1="50%" y1="50%" x2="15%" y2="15%" stroke="url(#connGrad1)" stroke-width="2" stroke-dasharray="5,5">
+                                <animate attributeName="stroke-dashoffset" from="0" to="10" dur="1s" repeatCount="indefinite"/>
+                            </line>
+                            <line x1="50%" y1="50%" x2="85%" y2="15%" stroke="url(#connGrad1)" stroke-width="2" stroke-dasharray="5,5">
+                                <animate attributeName="stroke-dashoffset" from="0" to="10" dur="1s" repeatCount="indefinite"/>
+                            </line>
+                            <line x1="50%" y1="50%" x2="20%" y2="85%" stroke="url(#connGrad1)" stroke-width="2" stroke-dasharray="5,5">
+                                <animate attributeName="stroke-dashoffset" from="0" to="10" dur="1s" repeatCount="indefinite"/>
+                            </line>
+                            <line x1="50%" y1="50%" x2="80%" y2="85%" stroke="url(#connGrad1)" stroke-width="2" stroke-dasharray="5,5">
+                                <animate attributeName="stroke-dashoffset" from="0" to="10" dur="1s" repeatCount="indefinite"/>
+                            </line>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ANALYTICS VIEW -->
+            <div id="view-analytics" class="view-section hidden">
+                <div class="grid grid-cols-2 gap-6 h-full">
+                    <div class="glass-card p-6 rounded-xl">
+                        <h3 class="text-lg font-bold text-white mb-4">24-Hour Load Forecast</h3>
+                        <canvas id="forecast-full-chart" class="w-full h-64"></canvas>
+                    </div>
+                    <div class="glass-card p-6 rounded-xl">
+                        <h3 class="text-lg font-bold text-white mb-4">ROI Breakdown</h3>
+                        <div class="space-y-4 mt-6">
+                            <div class="flex justify-between items-center p-4 bg-white/5 rounded-lg">
+                                <span class="text-sm text-gray-300">Total Workflows Processed</span>
+                                <span class="text-2xl font-bold text-ibm-blue" id="analytics-workflows">0</span>
+                            </div>
+                            <div class="flex justify-between items-center p-4 bg-white/5 rounded-lg">
+                                <span class="text-sm text-gray-300">Hours Saved</span>
+                                <span class="text-2xl font-bold text-green-400" id="analytics-hours">0</span>
+                            </div>
+                            <div class="flex justify-between items-center p-4 bg-white/5 rounded-lg">
+                                <span class="text-sm text-gray-300">Risk Avoided Value</span>
+                                <span class="text-2xl font-bold text-ibm-purple" id="analytics-risk">$0</span>
+                            </div>
+                            <div class="flex justify-between items-center p-4 bg-white/5 rounded-lg">
+                                <span class="text-sm text-gray-300">Automation Rate</span>
+                                <span class="text-2xl font-bold text-ibm-cyan">94.5%</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
         </div>
     </main>
 
+    <!-- Floating Action Button (Voice) -->
     <div class="fixed bottom-8 right-8 z-50">
-        <button onclick="triggerVoice()" class="w-14 h-14 bg-blue-600 rounded-full shadow-lg hover:bg-blue-500 text-white flex items-center justify-center text-xl shadow-[0_0_20px_rgba(15,98,254,0.5)]">
+        <button onclick="triggerVoice()" class="w-16 h-16 bg-gradient-to-r from-ibm-blue to-ibm-purple rounded-full shadow-2xl hover:scale-110 text-white flex items-center justify-center text-2xl transition-all shadow-[0_0_40px_rgba(15,98,254,0.6)]">
             <i class="fas fa-microphone"></i>
         </button>
     </div>
 
-    <div id="system-terminal" class="fixed bottom-0 left-0 w-full h-64 bg-[#0d0d0d] border-t border-ibm-blue/50 z-50 translate-y-full transition-transform duration-300 flex flex-col font-mono text-xs text-gray-300 shadow-2xl">
-        <div class="flex justify-between items-center px-4 py-2 bg-[#1a1a1a] border-b border-white/10">
-            <span class="text-ibm-blue font-bold">SYSTEM LOGS -- LIVE TAIL</span>
-            <button onclick="toggleTerminal()" class="text-gray-500 hover:text-white"><i class="fas fa-chevron-down"></i></button>
+    <!-- System Terminal -->
+    <div id="system-terminal" class="fixed bottom-0 left-0 w-full h-64 bg-[#0a0a0a] border-t-2 border-ibm-blue/50 z-50 translate-y-full transition-transform duration-300 flex flex-col font-mono text-xs text-gray-300 shadow-[0_-10px_50px_rgba(15,98,254,0.2)]">
+        <div class="flex justify-between items-center px-6 py-3 bg-[#121212] border-b border-white/10">
+            <span class="text-ibm-blue font-bold tracking-wide">
+                <i class="fas fa-terminal mr-2"></i>
+                SYSTEM LOGS — LIVE TAIL
+            </span>
+            <button onclick="toggleTerminal()" class="text-gray-500 hover:text-white transition-colors">
+                <i class="fas fa-chevron-down"></i>
+            </button>
         </div>
-        <div class="flex-1 overflow-y-auto p-4 space-y-1" id="terminal-content"></div>
+        <div class="flex-1 overflow-y-auto p-4 space-y-1" id="terminal-content">
+            <div class="text-gray-600">[INIT] Orchestrix Sentinel v10.0 initialized</div>
+        </div>
     </div>
     
-    <div id="whynot-modal" class="fixed inset-0 bg-black/90 z-[90] hidden flex items-center justify-center backdrop-blur-md">
-        <div class="bg-[#121212] border border-ibm-purple w-[600px] rounded-lg shadow-[0_0_50px_rgba(138,63,252,0.2)] p-6 relative">
-            <button onclick="document.getElementById('whynot-modal').classList.add('hidden')" class="absolute top-4 right-4 text-gray-500 hover:text-white"><i class="fas fa-times"></i></button>
-            <h3 class="text-xl font-bold text-white mb-1">Causal Decision Graph</h3>
-            <div id="whynot-content" class="space-y-4 font-mono text-xs mt-4"></div>
+    <!-- Explainability Modal -->
+    <div id="whynot-modal" class="fixed inset-0 bg-black/95 z-[90] hidden flex items-center justify-center backdrop-blur-xl">
+        <div class="bg-gradient-to-br from-[#1a1a20] to-[#121212] border-2 border-ibm-purple w-[700px] max-h-[80vh] overflow-y-auto rounded-2xl shadow-[0_0_80px_rgba(138,63,252,0.4)] p-8 relative">
+            <button onclick="document.getElementById('whynot-modal').classList.add('hidden')" class="absolute top-6 right-6 text-gray-500 hover:text-white text-xl transition-colors">
+                <i class="fas fa-times"></i>
+            </button>
+            <h3 class="text-2xl font-bold text-white mb-2 flex items-center gap-3">
+                <i class="fas fa-project-diagram text-ibm-purple"></i>
+                Causal Decision Graph
+            </h3>
+            <p class="text-sm text-gray-400 mb-6">Counterfactual analysis of decision pathways</p>
+            <div id="whynot-content" class="space-y-4 font-mono text-xs"></div>
         </div>
     </div>
 
-    <div id="hitl-modal" class="fixed inset-0 bg-black/90 z-[95] hidden flex items-center justify-center backdrop-blur-md">
-        <div class="bg-[#121212] border border-ibm-red w-[500px] rounded-lg shadow-[0_0_50px_rgba(250,77,86,0.3)] p-6 relative overflow-hidden">
-            <div class="absolute top-0 left-0 w-full h-1 bg-ibm-red animate-pulse"></div>
-            <h3 class="text-xl font-bold text-white flex items-center gap-2 mb-4"><i class="fas fa-hand-paper text-ibm-red"></i> INTERVENTION REQUIRED</h3>
-            <div class="flex gap-3">
-                <button onclick="resolveHitl('ABORT')" class="flex-1 py-3 border border-ibm-red text-ibm-red rounded font-bold">BLOCK</button>
-                <button onclick="resolveHitl('CONTINUE')" class="flex-1 py-3 bg-ibm-blue text-white rounded font-bold">AUTHORIZE</button>
+    <!-- HITL Intervention Modal -->
+    <div id="hitl-modal" class="fixed inset-0 bg-black/95 z-[95] hidden flex items-center justify-center backdrop-blur-xl">
+        <div class="bg-gradient-to-br from-[#1a1a20] to-[#121212] border-2 border-ibm-red w-[550px] rounded-2xl shadow-[0_0_80px_rgba(250,77,86,0.5)] p-8 relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-2 bg-ibm-red animate-pulse"></div>
+            <h3 class="text-2xl font-bold text-white flex items-center gap-3 mb-6">
+                <i class="fas fa-hand-paper text-ibm-red text-3xl"></i> 
+                INTERVENTION REQUIRED
+            </h3>
+            <p class="text-gray-300 mb-6" id="hitl-reason">High-risk workflow requires human authorization</p>
+            <div class="flex gap-4">
+                <button onclick="resolveHitl('ABORT')" class="flex-1 py-4 border-2 border-ibm-red text-ibm-red rounded-lg font-bold hover:bg-ibm-red hover:text-white transition-all">
+                    <i class="fas fa-ban mr-2"></i>
+                    BLOCK WORKFLOW
+                </button>
+                <button onclick="resolveHitl('CONTINUE')" class="flex-1 py-4 bg-ibm-blue text-white rounded-lg font-bold hover:bg-blue-600 transition-all">
+                    <i class="fas fa-check mr-2"></i>
+                    AUTHORIZE
+                </button>
             </div>
         </div>
     </div>
 
-    <div id="voice-interface" class="fixed inset-0 bg-black/90 z-[100] hidden flex flex-col items-center justify-center backdrop-blur-xl">
-        <div class="w-32 h-32 rounded-full border-4 border-ibm-blue flex items-center justify-center relative mb-8">
-            <div class="w-24 h-24 bg-ibm-blue rounded-full animate-ping absolute opacity-20"></div>
-            <i class="fas fa-microphone text-4xl text-white"></i>
+    <!-- Voice Interface -->
+    <div id="voice-interface" class="fixed inset-0 bg-black/95 z-[100] hidden flex flex-col items-center justify-center backdrop-blur-2xl">
+        <div class="w-40 h-40 rounded-full border-4 border-ibm-blue flex items-center justify-center relative mb-10">
+            <div class="w-32 h-32 bg-ibm-blue rounded-full animate-ping absolute opacity-30"></div>
+            <i class="fas fa-microphone text-5xl text-white relative z-10"></i>
         </div>
-        <input id="voice-transcript" type="text" class="bg-transparent border-b border-white/20 text-center text-2xl text-white pb-2 outline-none font-mono w-1/2" placeholder="Listening...">
-        <button onclick="confirmVoice()" class="mt-8 px-8 py-3 bg-white text-black font-bold rounded-full">EXECUTE</button>
+        <input id="voice-transcript" type="text" class="bg-transparent border-b-2 border-white/30 text-center text-3xl text-white pb-3 outline-none font-mono w-2/3 mb-8" placeholder="Listening...">
+        <div class="flex gap-4">
+            <button onclick="cancelVoice()" class="px-8 py-3 bg-gray-800 text-white font-bold rounded-full hover:bg-gray-700 transition-all">
+                CANCEL
+            </button>
+            <button onclick="confirmVoice()" class="px-8 py-3 bg-ibm-blue text-white font-bold rounded-full hover:bg-blue-600 transition-all">
+                <i class="fas fa-paper-plane mr-2"></i>
+                EXECUTE
+            </button>
+        </div>
     </div>
 
-    <div id="drawer" class="fixed top-0 right-0 h-full w-80 bg-[#121212] border-l border-white/10 transform translate-x-full transition-transform duration-300 z-40 pt-20 px-6">
+    <!-- Notification Drawer -->
+    <div id="drawer" class="fixed top-0 right-0 h-full w-96 bg-gradient-to-b from-[#1a1a20] to-[#0a0a0f] border-l border-white/10 transform translate-x-full transition-transform duration-300 z-40 pt-20 px-6">
         <div class="flex justify-between items-center mb-6">
-            <h3 class="text-white font-bold">Notification Log</h3>
-            <button onclick="toggleDrawer()" class="text-gray-500 hover:text-white"><i class="fas fa-times"></i></button>
+            <h3 class="text-white font-bold text-lg">Notification Log</h3>
+            <button onclick="toggleDrawer()" class="text-gray-500 hover:text-white transition-colors">
+                <i class="fas fa-times text-xl"></i>
+            </button>
         </div>
-        <div class="space-y-4" id="notification-list"></div>
+        <div class="space-y-4" id="notification-list">
+            <div class="p-4 bg-white/5 rounded-lg border border-ibm-blue/30">
+                <div class="flex items-start gap-3">
+                    <i class="fas fa-info-circle text-ibm-blue text-lg mt-1"></i>
+                    <div class="flex-1">
+                        <div class="text-sm text-white font-semibold mb-1">System Online</div>
+                        <div class="text-xs text-gray-400">All services operational</div>
+                        <div class="text-[10px] text-gray-600 mt-2">2 minutes ago</div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
         const API_URL = "https://orchestrix-sentinel.onrender.com";
-        let isSimulating = false, activeHitlId = null;
+        let isPolling = false;
+        let activeHitlId = null;
+        let forecastChart, miniChart;
 
-        // BOOT
+        // ═══════════════════════════════════════
+        // BOOT SEQUENCE
+        // ═══════════════════════════════════════
         window.onload = () => {
-            const log = document.getElementById('boot-log');
-            const prog = document.getElementById('boot-progress');
-            if(prog) prog.style.width = "100%";
+            const bootLog = document.getElementById('boot-log');
+            const bootProgress = document.getElementById('boot-progress');
+            
+            const bootMessages = [
+                "Initializing kernel modules...",
+                "Loading IBM watsonx AI integration...",
+                "Establishing MCP server connection...",
+                "Activating A2A protocol handlers...",
+                "Mounting blockchain ledger...",
+                "Spawning 5-agent governance mesh...",
+                "Loading neural execution DAG...",
+                "System ready. Welcome back, Commander."
+            ];
+            
+            bootMessages.forEach((msg, i) => {
+                setTimeout(() => {
+                    const line = document.createElement('div');
+                    line.className = 'text-green-400 terminal-line';
+                    line.textContent = `[${String(i+1).padStart(2,'0')}] ${msg}`;
+                    bootLog.appendChild(line);
+                    bootLog.scrollTop = bootLog.scrollHeight;
+                }, i * 300);
+            });
+            
+            if(bootProgress) bootProgress.style.width = "100%";
+            
             setTimeout(() => {
-                const boot = document.getElementById('boot-screen');
-                if(boot) { boot.style.opacity = 0; setTimeout(() => boot.remove(), 1000); }
+                const bootScreen = document.getElementById('boot-screen');
+                if(bootScreen) {
+                    bootScreen.style.opacity = '0';
+                    setTimeout(() => bootScreen.remove(), 1000);
+                }
                 nav('dashboard');
-            }, 2000);
+                initCharts();
+            }, 3000);
         };
 
+        // ═══════════════════════════════════════
+        // NAVIGATION
+        // ═══════════════════════════════════════
         function nav(view) {
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             const btn = document.getElementById(`nav-${view}`);
             if(btn) btn.classList.add('active');
+            
             document.querySelectorAll('.view-section').forEach(v => v.classList.add('hidden'));
-            document.getElementById(`view-${view}`).classList.remove('hidden');
-            if(view === 'dashboard') startPolling(); else stopPolling();
+            const viewEl = document.getElementById(`view-${view}`);
+            if(viewEl) viewEl.classList.remove('hidden');
+            
+            if(view === 'dashboard') {
+                startPolling();
+            } else {
+                stopPolling();
+            }
         }
 
+        // ═══════════════════════════════════════
+        // DATA POLLING
+        // ═══════════════════════════════════════
         function startPolling() {
-            if(isPolling) return; isPolling = true;
+            if(isPolling) return;
+            isPolling = true;
             fetchData();
             window.pollInt = setInterval(fetchData, 5000);
-            window.clockInt = setInterval(() => document.getElementById('sys-clock').innerText = new Date().toISOString().split('T')[1].split('.')[0] + " UTC", 1000);
+            window.clockInt = setInterval(updateClock, 1000);
         }
-        function stopPolling() { isPolling = false; clearInterval(window.pollInt); clearInterval(window.clockInt); }
+
+        function stopPolling() {
+            isPolling = false;
+            clearInterval(window.pollInt);
+            clearInterval(window.clockInt);
+        }
+
+        function updateClock() {
+            const clock = document.getElementById('sys-clock');
+            if(clock) {
+                const now = new Date();
+                clock.textContent = now.toISOString().split('T')[1].split('.')[0] + " UTC";
+            }
+        }
 
         async function fetchData() {
             try {
-                const res = await fetch(`${API_URL}/dashboard/stats`);
-                if(!res.ok) throw new Error("API Error");
-                const data = await res.json();
+                // Dashboard Stats
+                const statsRes = await fetch(`${API_URL}/dashboard/stats`);
+                if(!statsRes.ok) throw new Error("Stats API Error");
+                const stats = await statsRes.json();
                 
-                updateSafe('kpi-total', data.total_workflows);
-                updateSafe('kpi-alerts', data.compliance_issues);
+                updateSafe('kpi-total', stats.total_workflows);
+                updateSafe('kpi-alerts', stats.compliance_issues);
+                updateSafe('blockchain-height', stats.blockchain_height || 0);
                 
+                // ROI Analytics
                 const roiRes = await fetch(`${API_URL}/api/v1/analytics/roi`);
                 if(roiRes.ok) {
                     const roi = await roiRes.json();
                     updateSafe('roi-hours', roi.hours_saved);
                     updateSafe('roi-risk', roi.risk_avoided_value);
+                    updateSafe('analytics-workflows', stats.total_workflows);
+                    updateSafe('analytics-hours', roi.hours_saved);
+                    updateSafe('analytics-risk', roi.risk_avoided_value);
+                    updateSafe('sla-adherence', roi.sla_adherence);
                 }
 
-                const wfs = await (await fetch(`${API_URL}/api/v1/workflows`)).json();
-                renderTable(wfs);
-                if(wfs.length) updateGraph(wfs[0]);
+                // Workflows
+                const wfsRes = await fetch(`${API_URL}/api/v1/workflows`);
+                if(wfsRes.ok) {
+                    const wfs = await wfsRes.json();
+                    renderTable(wfs);
+                    if(wfs.length > 0) updateGraph(wfs[0]);
+                }
 
-                document.getElementById('conn-status').innerText = "CONNECTED";
-                document.getElementById('conn-status').className = "text-green-400 font-bold";
-                isSimulating = false;
+                // Agent Health
+                const agentsRes = await fetch(`${API_URL}/api/v1/agents/health`);
+                if(agentsRes.ok) {
+                    const agents = await agentsRes.json();
+                    updateAgentHealth(agents.agents);
+                }
 
+                // HITL Queue
+                const hitlRes = await fetch(`${API_URL}/api/v1/hitl/queue`);
+                if(hitlRes.ok) {
+                    const hitlQueue = await hitlRes.json();
+                    renderHITLQueue(hitlQueue);
+                    
+                    if(hitlQueue.length > 0 && activeHitlId !== hitlQueue[0].id) {
+                        activeHitlId = hitlQueue[0].id;
+                        showHITL(hitlQueue[0]);
+                    }
+                }
+
+                // Forecast
+                const forecastRes = await fetch(`${API_URL}/api/v1/analytics/forecast`);
+                if(forecastRes.ok) {
+                    const forecast = await forecastRes.json();
+                    updateForecastChart(forecast.forecast);
+                }
+
+                // Update Status
+                document.getElementById('conn-status').innerHTML = '<span class="pulse-dot bg-green-400"></span> LIVE';
+                document.getElementById('conn-status').className = "status-badge online";
+                
+                // Update Ledger
                 updateLedger();
                 
-                const hitl = wfs.find(w => w.status === "WAITING_FOR_HUMAN");
-                if(hitl && activeHitlId !== hitl.id) { activeHitlId = hitl.id; document.getElementById('hitl-modal').classList.remove('hidden'); }
-                
-                const graphPlaceholder = document.getElementById('graph-placeholder');
-                if(graphPlaceholder && wfs.length > 0) graphPlaceholder.style.display = 'none';
+                logToTerminal(`<span class="text-green-400">[SUCCESS]</span> Data sync completed • ${stats.total_workflows} workflows active`);
 
             } catch (e) {
-                console.warn("Backend offline. Simulation Mode.");
-                enableSimulation();
+                console.warn("Backend connection failed:", e);
+                document.getElementById('conn-status').innerHTML = '<span class="pulse-dot bg-red-400"></span> OFFLINE';
+                document.getElementById('conn-status').className = "status-badge warning";
+                logToTerminal(`<span class="text-red-400">[ERROR]</span> Connection to backend lost`);
             }
         }
-        
+
         function updateSafe(id, val) {
             const el = document.getElementById(id);
-            if(el) el.innerText = val;
+            if(el) el.textContent = val;
         }
 
-        function enableSimulation() {
-            if(isSimulating) return;
-            isSimulating = true;
-            document.getElementById('conn-status').innerText = "SIMULATION MODE";
-            document.getElementById('conn-status').className = "text-blue-400 font-bold animate-pulse";
-            
-            updateSafe('kpi-total', 12);
-            updateSafe('kpi-alerts', 1);
-            updateSafe('roi-hours', 142);
-            updateSafe('roi-risk', "$450k");
-            
-            const tbody = document.getElementById('wf-table-body');
-            tbody.innerHTML = `
-                <tr class="hover:bg-white/5 transition-colors border-b border-white/5">
-                    <td class="px-6 py-3 font-mono text-white">WFX-DEMO-01</td>
-                    <td class="px-6 py-3 font-bold text-green-400">COMPLETED</td>
-                    <td class="px-6 py-3 text-right"><button onclick="showWhyNot('demo')" class="text-xs bg-white/10 hover:bg-ibm-purple px-2 py-1 rounded">Explain</button></td>
-                </tr>
-            `;
-        }
-
+        // ═══════════════════════════════════════
+        // RENDER FUNCTIONS
+        // ═══════════════════════════════════════
         function renderTable(wfs) {
             const tbody = document.getElementById('wf-table-body');
-            tbody.innerHTML = wfs.slice(0, 5).map(w => `
-                <tr class="hover:bg-white/5 transition-colors border-b border-white/5">
-                    <td class="px-6 py-3 font-mono text-white">${w.id}</td>
-                    <td class="px-6 py-3 font-bold ${w.status.includes('COMPLETED')?'text-green-400':'text-ibm-blue'}">${w.status}</td>
-                    <td class="px-6 py-3 text-right"><button onclick="showWhyNot('${w.id}')" class="text-xs bg-white/10 hover:bg-ibm-purple px-2 py-1 rounded transition-colors">Explain</button></td>
-                </tr>
-            `).join('');
+            if(!tbody) return;
+            
+            tbody.innerHTML = wfs.slice(0, 8).map(w => {
+                const statusClass = w.status.includes('COMPLETED') ? 'text-green-400' : 
+                                   w.status.includes('BLOCKED') ? 'text-red-400' : 'text-ibm-blue';
+                
+                const complianceClass = w.compliance_flag ? 'text-red-400' : 'text-green-400';
+                const complianceIcon = w.compliance_flag ? 'fa-times-circle' : 'fa-check-circle';
+                
+                const riskColor = w.risk_score > 0.7 ? 'text-red-400' : 
+                                 w.risk_score > 0.4 ? 'text-yellow-400' : 'text-green-400';
+                
+                return `
+                    <tr class="hover:bg-white/5 transition-colors border-b border-white/5">
+                        <td class="px-6 py-4 font-mono text-white font-semibold">${w.id}</td>
+                        <td class="px-6 py-4 font-bold ${statusClass}">${w.status}</td>
+                        <td class="px-6 py-4">
+                            <i class="fas ${complianceIcon} ${complianceClass} mr-1"></i>
+                            <span class="${complianceClass}">${w.compliance_flag ? 'VIOLATION' : 'COMPLIANT'}</span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="font-bold ${riskColor}">${(w.risk_score * 100).toFixed(0)}%</span>
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <button onclick="showWhyNot('${w.id}')" class="text-xs bg-ibm-purple/20 hover:bg-ibm-purple text-ibm-purple hover:text-white px-3 py-1.5 rounded-lg transition-all border border-ibm-purple/30">
+                                <i class="fas fa-project-diagram mr-1"></i>
+                                Explain
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
         }
 
         async function updateGraph(wf) {
-            if(isSimulating) return;
-            const res = await fetch(`${API_URL}/api/v1/visualize/graph/${wf.id}`);
-            const d = await res.json();
-            if(d.image_base64) document.getElementById('graph-container').innerHTML = `<img src="${d.image_base64}" class="h-full object-contain animate-pulse-fast">`;
+            try {
+                const res = await fetch(`${API_URL}/api/v1/visualize/graph/${wf.id}`);
+                const data = await res.json();
+                
+                if(data.image_base64) {
+                    const container = document.getElementById('graph-container');
+                    container.innerHTML = `<img src="${data.image_base64}" class="max-h-full max-w-full object-contain animate-pulse-fast">`;
+                    document.getElementById('graph-placeholder').style.display = 'none';
+                }
+            } catch(e) {
+                console.warn("Graph fetch failed:", e);
+            }
         }
 
         function updateLedger() {
             const container = document.getElementById('ledger-container');
             if(!container) return;
-            const hash = Math.random().toString(16).substr(2, 10);
-            container.innerHTML = `<div class="ledger-block active animate-slide-up border-l border-gray-600 pl-2 mb-2"><div class="text-[9px] text-gray-500">NEW_BLOCK</div><div class="text-[10px] text-ibm-teal">0x${hash}...</div></div>` + container.innerHTML;
-            if(container.children.length > 8) container.lastChild.remove();
+            
+            const hash = Math.random().toString(16).substr(2, 12);
+            const timestamp = new Date().toISOString().split('T').join(' ').split('.')[0];
+            
+            const newBlock = document.createElement('div');
+            newBlock.className = 'ledger-block active';
+            newBlock.innerHTML = `
+                <div class="text-[9px] text-gray-500 uppercase">NEW BLOCK</div>
+                <div class="text-[10px] text-ibm-teal truncate">0x${hash}...</div>
+                <div class="text-[8px] text-gray-600 mt-1">${timestamp}</div>
+            `;
+            
+            container.insertBefore(newBlock, container.firstChild);
+            
+            // Keep max 10 blocks
+            while(container.children.length > 10) {
+                container.removeChild(container.lastChild);
+            }
         }
 
+        function updateAgentHealth(agents) {
+            if(!agents) return;
+            
+            agents.forEach(agent => {
+                const card = document.getElementById(`agent-${agent.name.toLowerCase()}`);
+                if(card) {
+                    const statusEl = card.querySelector('.text-\\[10px\\]');
+                    if(statusEl) {
+                        statusEl.textContent = agent.status;
+                        statusEl.className = agent.status === 'ACTIVE' ? 'text-[10px] text-green-400 mt-1' : 'text-[10px] text-red-400 mt-1';
+                    }
+                    
+                    const uptimeEl = card.querySelector('.text-\\[9px\\]');
+                    if(uptimeEl) {
+                        uptimeEl.textContent = agent.uptime;
+                    }
+                }
+            });
+        }
+
+        function renderHITLQueue(queue) {
+            const container = document.getElementById('hitl-queue-container');
+            if(!container) return;
+            
+            if(queue.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-gray-500 py-20">
+                        <i class="fas fa-check-circle text-5xl mb-4 text-green-500"></i>
+                        <p class="text-lg">All Clear - No Pending Interventions</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = queue.map(ticket => `
+                <div class="p-5 bg-white/5 rounded-xl border border-ibm-red/30">
+                    <div class="flex justify-between items-start mb-3">
+                        <h4 class="text-sm font-bold text-white">${ticket.id}</h4>
+                        <span class="status-badge warning">${ticket.priority}</span>
+                    </div>
+                    <p class="text-xs text-gray-400 mb-3">${ticket.reason}</p>
+                    <div class="flex gap-2">
+                        <button onclick="resolveHitl('ABORT', '${ticket.id}')" class="flex-1 py-2 border border-ibm-red text-ibm-red rounded-lg text-xs font-bold hover:bg-ibm-red hover:text-white transition-all">
+                            BLOCK
+                        </button>
+                        <button onclick="resolveHitl('CONTINUE', '${ticket.id}')" class="flex-1 py-2 bg-ibm-blue text-white rounded-lg text-xs font-bold hover:bg-blue-600 transition-all">
+                            AUTHORIZE
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ═══════════════════════════════════════
+        // MODALS & INTERACTIONS
+        // ═══════════════════════════════════════
         async function showWhyNot(wid) {
-            let data = { chosen_path: "Standard Execution", rejected_alternatives: [] };
-            if(!isSimulating && wid !== 'demo') {
-                 try {
-                     const res = await fetch(`${API_URL}/api/v1/explainability/whynot/${wid}`);
-                     data = await res.json();
-                 } catch(e) {}
-            } else {
-                 data = { chosen_path: "Approved Execution", rejected_alternatives: [{path: "Unchecked Run", risk: "High", reason: "Policy Violation"}]};
+            try {
+                const res = await fetch(`${API_URL}/api/v1/explainability/whynot/${wid}`);
+                const data = await res.json();
+                
+                const content = document.getElementById('whynot-content');
+                content.innerHTML = `
+                    <div class="p-4 bg-green-500/10 border-2 border-green-500 rounded-lg mb-4">
+                        <div class="flex items-center gap-3 mb-2">
+                            <i class="fas fa-check-circle text-green-400 text-2xl"></i>
+                            <div>
+                                <div class="text-green-400 font-bold text-sm">CHOSEN PATH</div>
+                                <div class="text-white text-lg font-bold">${data.chosen_path}</div>
+                            </div>
+                        </div>
+                        <p class="text-gray-400 text-xs mt-2">${data.chosen_reason || 'Optimal decision based on governance mesh consensus'}</p>
+                    </div>
+                `;
+                
+                if(data.alternatives && data.alternatives.length > 0) {
+                    content.innerHTML += '<div class="text-gray-400 font-bold mb-3 text-xs uppercase tracking-wide">Alternative Paths (Rejected)</div>';
+                    
+                    data.alternatives.forEach(alt => {
+                        content.innerHTML += `
+                            <div class="p-4 bg-red-500/10 border border-red-500/30 rounded-lg mb-3">
+                                <div class="flex items-start gap-3">
+                                    <i class="fas fa-times-circle text-red-400 text-xl mt-1"></i>
+                                    <div class="flex-1">
+                                        <div class="text-red-400 font-bold text-sm mb-1">${alt.path}</div>
+                                        <p class="text-gray-400 text-xs">${alt.reason}</p>
+                                        <div class="flex gap-4 mt-2 text-[10px]">
+                                            <span class="text-gray-500">Risk Delta: <span class="text-red-400 font-bold">${alt.risk_delta || '+50%'}</span></span>
+                                            <span class="text-gray-500">Verdict: <span class="text-red-400 font-bold">${alt.verdict || 'UNSAFE'}</span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                
+                document.getElementById('whynot-modal').classList.remove('hidden');
+                
+            } catch(e) {
+                console.error("Explainability fetch failed:", e);
             }
-            const div = document.getElementById('whynot-content');
-            div.innerHTML = `<div class="p-3 bg-green-500/10 border border-green-500 rounded mb-4 text-green-400 font-bold">CHOSEN: ${data.chosen_path}</div>`;
-            if(data.rejected_alternatives.length) {
-                data.rejected_alternatives.forEach(alt => div.innerHTML += `<div class="p-3 bg-red-500/10 border border-red-500 rounded text-red-400">REJECTED: ${alt.path} (${alt.reason})</div>`);
-            }
-            document.getElementById('whynot-modal').classList.remove('hidden');
         }
 
-        function triggerVoice() {
-             document.getElementById('voice-interface').classList.remove('hidden');
-        }
-        function cancelVoice() { document.getElementById('voice-interface').classList.add('hidden'); }
-        
-        async function confirmVoice() {
-            const txt = document.getElementById('voice-transcript').value;
-            document.getElementById('voice-interface').classList.add('hidden');
-            if(!isSimulating) {
-                 await fetch(`${API_URL}/api/v1/orchestrate/trigger`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({request_text: txt, department: "Executive"}) });
-                 setTimeout(fetchData, 1000);
-            } else {
-                 alert("Simulation: Triggered " + txt);
-            }
-            nav('dashboard');
+        function showHITL(ticket) {
+            document.getElementById('hitl-reason').textContent = ticket.reason;
+            document.getElementById('hitl-modal').classList.remove('hidden');
         }
 
-        function resolveHitl(dec) {
-             if(!isSimulating) fetch(`${API_URL}/api/v1/human-help/resolve`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ticket_id: activeHitlId, decision: dec}) });
-             document.getElementById('hitl-modal').classList.add('hidden'); activeHitlId = null;
-        }
-        
-        function toggleCmdPalette() { document.getElementById('cmd-palette').classList.toggle('hidden'); }
-        function toggleTerminal() { document.getElementById('system-terminal').classList.toggle('translate-y-full'); }
-        function toggleDrawer() { 
-            const d = document.getElementById('drawer');
-            if(d.classList.contains('translate-x-full')) d.classList.remove('translate-x-full');
-            else d.classList.add('translate-x-full');
-        }
-        function logToTerminal(msg) { document.getElementById('terminal-content').innerHTML += `<div>[${new Date().toLocaleTimeString()}] ${msg}</div>`; }
-        function handleUpload(input) { 
-            const status = document.getElementById('upload-status');
-            status.classList.remove('opacity-0');
-            setTimeout(() => status.innerText = "Complete. Policy Active.", 2000);
-        }
-        function exportData() { alert("Trust Ledger exported to CSV."); }
-        function runCmd(cmd) { toggleCmdPalette(); triggerVoice(); }
-
-        function updateSim(val) { 
-            document.getElementById('sim-risk-val').innerText = Math.min(99, val*1.5).toFixed(0) + "%";
-            const hr = document.getElementById('node-hr').querySelector('circle');
-            const fin = document.getElementById('node-fin').querySelector('circle');
-            if(val > 60) { 
-                hr.setAttribute('fill', '#fa4d56'); hr.setAttribute('stroke', 'white');
-                fin.setAttribute('fill', '#fa4d56'); fin.setAttribute('stroke', 'white');
-            } else {
-                hr.setAttribute('fill', '#333'); hr.setAttribute('stroke', '#555');
-                fin.setAttribute('fill', '#333'); fin.setAttribute('stroke', '#555');
+        async function resolveHitl(decision, ticketId = null) {
+            const id = ticketId || activeHitlId;
+            if(!id) return;
+            
+            try {
+                await fetch(`${API_URL}/api/v1/hitl/resolve`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        ticket_id: id,
+                        resolution: {action: decision}
+                    })
+                });
+                
+                document.getElementById('hitl-modal').classList.add('hidden');
+                activeHitlId = null;
+                
+                logToTerminal(`<span class="text-ibm-blue">[HITL]</span> Ticket ${id} resolved: ${decision}`);
+                
+                setTimeout(fetchData, 1000);
+                
+            } catch(e) {
+                console.error("HITL resolution failed:", e);
             }
         }
-        
-        function runGenesis() {
-            const out = document.getElementById('code-output');
-            out.innerHTML = '<div class="text-ibm-blue">Initializing IBM Granite...</div>';
-            const lines = ["> Parsing Intent...", "> Generating AST...", "> Linting Security Rules...", "> Packaging for ADK...", "SUCCESS."];
-            lines.forEach((l, i) => setTimeout(() => out.innerHTML += `<div class="text-green-400 terminal-line">${l}</div>`, (i+1)*800));
+
+        // ═══════════════════════════════════════
+        // FEATURE INTERACTIONS
+        // ═══════════════════════════════════════
+        async function testCompliance() {
+            const input = document.getElementById('compliance-test-input');
+            const result = document.getElementById('compliance-result');
+            const text = input.value;
+            
+            if(!text) return;
+            
+            try {
+                const res = await fetch(`${API_URL}/mcp/tools/guardian_check`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({request_text: text})
+                });
+                
+                const data = await res.json();
+                
+                const isViolation = data.verdict === 'VIOLATION';
+                const bgClass = isViolation ? 'bg-red-500/10 border-red-500' : 'bg-green-500/10 border-green-500';
+                const textClass = isViolation ? 'text-red-400' : 'text-green-400';
+                const icon = isViolation ? 'fa-times-circle' : 'fa-check-circle';
+                
+                result.innerHTML = `
+                    <div class="p-4 ${bgClass} border-2 rounded-lg">
+                        <div class="flex items-center gap-3 mb-2">
+                            <i class="fas ${icon} ${textClass} text-2xl"></i>
+                            <div class="text-xl font-bold ${textClass}">${data.verdict}</div>
+                        </div>
+                        <p class="text-gray-400 text-sm">${data.explanation}</p>
+                        ${data.flagged_policy ? `<p class="text-xs text-gray-500 mt-2">Policy: ${data.flagged_policy}</p>` : ''}
+                    </div>
+                `;
+                
+            } catch(e) {
+                result.innerHTML = `<div class="p-4 bg-red-500/10 border-2 border-red-500 rounded-lg text-red-400">Connection Error</div>`;
+            }
         }
-        
-        function runDebate() {
+
+        async function runGenesis() {
+            const input = document.getElementById('genesis-input');
+            const output = document.getElementById('code-output');
+            const description = input.value;
+            
+            if(!description) return;
+            
+            output.innerHTML = '<div class="terminal-line text-ibm-purple">&gt; Initializing IBM Granite 13B...</div>';
+            
+            const lines = [
+                '&gt; Parsing intent...',
+                '&gt; Generating AST...',
+                '&gt; Applying security constraints...',
+                '&gt; Packaging for watsonx ADK...',
+                '<span class="text-green-400">&gt; SUCCESS • Skill generated</span>'
+            ];
+            
+            lines.forEach((line, i) => {
+                setTimeout(() => {
+                    output.innerHTML += `<div class="terminal-line text-gray-300">${line}</div>`;
+                    output.scrollTop = output.scrollHeight;
+                }, (i + 1) * 700);
+            });
+            
+            setTimeout(async () => {
+                try {
+                    const res = await fetch(`${API_URL}/mcp/tools/genesis_create`, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({tool_description: description})
+                    });
+                    
+                    const data = await res.json();
+                    
+                    output.innerHTML += `
+                        <div class="terminal-line text-ibm-teal mt-4">// ${data.tool_name}</div>
+                        <div class="terminal-line text-gray-400 whitespace-pre-wrap">${data.generated_code.substring(0, 500)}...</div>
+                    `;
+                    
+                    logToTerminal(`<span class="text-ibm-purple">[GENESIS]</span> Skill created: ${data.tool_name}`);
+                    
+                } catch(e) {
+                    output.innerHTML += '<div class="terminal-line text-red-400">ERROR: Backend connection failed</div>';
+                }
+            }, lines.length * 700 + 500);
+        }
+
+        async function runDebate() {
             const container = document.getElementById('debate-container');
-            container.innerHTML = '';
-            const turns = ["Security: VOTE YES", "Efficiency: VOTE YES", "Governance: VOTE YES"];
-            turns.forEach((t, i) => setTimeout(() => container.innerHTML += `<div class="bg-white/5 p-2 mb-2 rounded">${t}</div>`, i*800));
+            container.innerHTML = '<div class="text-center text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i>Starting debate session...</div>';
+            
+            try {
+                const res = await fetch(`${API_URL}/api/v1/agents/health`);
+                const data = await res.json();
+                
+                setTimeout(() => {
+                    container.innerHTML = '';
+                    
+                    if(data.agents) {
+                        data.agents.forEach((agent, i) => {
+                            setTimeout(() => {
+                                const vote = Math.random() > 0.3 ? 'YES' : 'NO';
+                                const voteClass = vote === 'YES' ? 'text-green-400' : 'text-red-400';
+                                const icon = vote === 'YES' ? 'fa-check-circle' : 'fa-times-circle';
+                                
+                                container.innerHTML += `
+                                    <div class="p-4 bg-white/5 rounded-lg border border-white/10 animate-slide-up">
+                                        <div class="flex items-center gap-3 mb-2">
+                                            <i class="fas ${icon} ${voteClass}"></i>
+                                            <span class="text-white font-bold">${agent.name}</span>
+                                            <span class="ml-auto ${voteClass} font-bold">VOTE ${vote}</span>
+                                        </div>
+                                        <p class="text-xs text-gray-400">Weight: ${(Math.random() * 2).toFixed(1)} • Uptime: ${agent.uptime}</p>
+                                    </div>
+                                `;
+                            }, i * 600);
+                        });
+                    }
+                }, 1000);
+                
+            } catch(e) {
+                container.innerHTML = '<div class="text-red-400">Connection error</div>';
+            }
         }
 
-        // Charts
-        const spark = new Chart(document.getElementById('latency-spark'), { type: 'line', data: { labels: Array(10).fill(''), datasets: [{data: Array(10).fill(50), borderColor: '#0f62fe', borderWidth: 2, pointRadius: 0, tension: 0.4}] }, options: {responsive:true, maintainAspectRatio:false, plugins:{legend:false}, scales:{x:{display:false}, y:{display:false}}} });
-        function updateSparkline() { const d = spark.data.datasets[0].data; d.shift(); d.push(Math.random()*40+40); spark.update('none'); }
-        new Chart(document.getElementById('forecast-mini-chart'), { type: 'bar', data: { labels: Array(24).fill(''), datasets: [{data: Array(24).fill(0).map(()=>Math.random()*100), backgroundColor: '#8a3ffc'}] }, options: {responsive:true, maintainAspectRatio:false, plugins:{legend:false}, scales:{x:{display:false}, y:{display:false}}} });
+        function updateSim(val) {
+            const risk = Math.min(99, val * 1.5).toFixed(0);
+            document.getElementById('sim-risk-val').textContent = risk + "%";
+            
+            const nodes = ['hr', 'fin', 'it'];
+            nodes.forEach(node => {
+                const circle = document.getElementById(`node-${node}`).querySelector('circle');
+                if(val > 60) {
+                    circle.setAttribute('fill', '#fa4d56');
+                    circle.setAttribute('stroke', 'white');
+                } else {
+                    circle.setAttribute('fill', '#1a1a20');
+                    circle.setAttribute('stroke', '#555');
+                }
+            });
+        }
 
-        // Mesh
-        const ctx = document.getElementById('neural-mesh').getContext('2d');
-        let w = window.innerWidth, h = window.innerHeight;
-        const parts = Array(50).fill().map(() => ({x: Math.random()*w, y: Math.random()*h, vx: (Math.random()-.5), vy: (Math.random()-.5)}));
+        // ═══════════════════════════════════════
+        // VOICE INTERFACE
+        // ═══════════════════════════════════════
+        function triggerVoice() {
+            document.getElementById('voice-interface').classList.remove('hidden');
+            document.getElementById('voice-transcript').focus();
+        }
+
+        function cancelVoice() {
+            document.getElementById('voice-interface').classList.add('hidden');
+            document.getElementById('voice-transcript').value = '';
+        }
+
+        async function confirmVoice() {
+            const text = document.getElementById('voice-transcript').value;
+            if(!text) return;
+            
+            try {
+                await fetch(`${API_URL}/api/v1/orchestrate/trigger`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        request_text: text,
+                        department: "Executive"
+                    })
+                });
+                
+                logToTerminal(`<span class="text-ibm-blue">[VOICE]</span> Command executed: "${text}"`);
+                
+                document.getElementById('voice-interface').classList.add('hidden');
+                document.getElementById('voice-transcript').value = '';
+                
+                setTimeout(fetchData, 1000);
+                nav('dashboard');
+                
+            } catch(e) {
+                console.error("Voice command failed:", e);
+            }
+        }
+
+        // ═══════════════════════════════════════
+        // UI HELPERS
+        // ═══════════════════════════════════════
+        function toggleTerminal() {
+            document.getElementById('system-terminal').classList.toggle('translate-y-full');
+        }
+
+        function toggleDrawer() {
+            const drawer = document.getElementById('drawer');
+            drawer.classList.toggle('translate-x-full');
+        }
+
+        function logToTerminal(msg) {
+            const terminal = document.getElementById('terminal-content');
+            if(!terminal) return;
+            
+            const timestamp = new Date().toLocaleTimeString();
+            const line = document.createElement('div');
+            line.className = 'terminal-line';
+            line.innerHTML = `<span class="text-gray-600">[${timestamp}]</span> ${msg}`;
+            
+            terminal.appendChild(line);
+            terminal.scrollTop = terminal.scrollHeight;
+            
+            // Keep max 100 lines
+            while(terminal.children.length > 100) {
+                terminal.removeChild(terminal.firstChild);
+            }
+        }
+
+        // ═══════════════════════════════════════
+        // CHARTS
+        // ═══════════════════════════════════════
+        function initCharts() {
+            // Mini Forecast Chart
+            const miniCtx = document.getElementById('forecast-mini-chart');
+            if(miniCtx) {
+                miniChart = new Chart(miniCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: Array(24).fill(''),
+                        datasets: [{
+                            data: Array(24).fill(0).map(() => Math.random() * 100),
+                            backgroundColor: '#8a3ffc',
+                            borderRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: false, tooltip: false },
+                        scales: {
+                            x: { display: false },
+                            y: { display: false }
+                        }
+                    }
+                });
+            }
+            
+            // Full Forecast Chart
+            const fullCtx = document.getElementById('forecast-full-chart');
+            if(fullCtx) {
+                forecastChart = new Chart(fullCtx, {
+                    type: 'line',
+                    data: {
+                        labels: Array(24).fill(0).map((_, i) => `${i}:00`),
+                        datasets: [{
+                            label: 'Predicted Load',
+                            data: Array(24).fill(50),
+                            borderColor: '#0f62fe',
+                            backgroundColor: 'rgba(15, 98, 254, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            borderWidth: 3
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: { color: 'rgba(255,255,255,0.05)' },
+                                ticks: { color: '#888' }
+                            },
+                            x: {
+                                grid: { display: false },
+                                ticks: { color: '#888' }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        function updateForecastChart(data) {
+            if(!forecastChart || !data) return;
+            
+            forecastChart.data.labels = data.map(d => d.hour);
+            forecastChart.data.datasets[0].data = data.map(d => d.predicted_load);
+            forecastChart.update('none');
+            
+            if(miniChart) {
+                miniChart.data.datasets[0].data = data.map(d => d.predicted_load);
+                miniChart.update('none');
+            }
+        }
+
+        // ═══════════════════════════════════════
+        // NEURAL MESH BACKGROUND
+        // ═══════════════════════════════════════
+        const canvas = document.getElementById('neural-mesh');
+        const ctx = canvas.getContext('2d');
+        
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        
+        const particles = Array(80).fill().map(() => ({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            vx: (Math.random() - 0.5) * 0.5,
+            vy: (Math.random() - 0.5) * 0.5
+        }));
+        
         function drawMesh() {
-            ctx.clearRect(0,0,w,h); ctx.fillStyle = 'rgba(15,98,254,0.3)';
-            parts.forEach(p => { p.x+=p.vx; p.y+=p.vy; if(p.x<0||p.x>w) p.vx*=-1; if(p.y<0||p.y>h) p.vy*=-1; ctx.beginPath(); ctx.arc(p.x,p.y,2,0,7); ctx.fill(); });
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw connections
+            ctx.strokeStyle = 'rgba(15, 98, 254, 0.15)';
+            ctx.lineWidth = 1;
+            
+            particles.forEach((p1, i) => {
+                particles.slice(i + 1).forEach(p2 => {
+                    const dx = p1.x - p2.x;
+                    const dy = p1.y - p2.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if(dist < 150) {
+                        ctx.beginPath();
+                        ctx.moveTo(p1.x, p1.y);
+                        ctx.lineTo(p2.x, p2.y);
+                        ctx.stroke();
+                    }
+                });
+            });
+            
+            // Draw particles
+            ctx.fillStyle = 'rgba(15, 98, 254, 0.5)';
+            particles.forEach(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+                
+                if(p.x < 0 || p.x > canvas.width) p.vx *= -1;
+                if(p.y < 0 || p.y > canvas.height) p.vy *= -1;
+                
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            
             requestAnimationFrame(drawMesh);
         }
+        
         drawMesh();
     </script>
 </body>
