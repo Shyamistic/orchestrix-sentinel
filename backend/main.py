@@ -40,10 +40,10 @@ app = FastAPI(title=SERVICE_NAME, version=VERSION)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # ALLOW ALL (Fixes CORS instantly)
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["*"],  # Allow all methods (GET, POST, OPTIONS)
+    allow_headers=["*"],  # Allow all headers
 )
 
 @app.get("/health")
