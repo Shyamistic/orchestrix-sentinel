@@ -1175,19 +1175,52 @@
         }
 
         async function updateGraph(wf) {
-            try {
-                const res = await fetch(`${API_URL}/api/v1/visualize/graph/${wf.id}`);
-                const data = await res.json();
-                
-                if(data.image_base64) {
-                    const container = document.getElementById('graph-container');
-                    container.innerHTML = `<img src="${data.image_base64}" class="max-h-full max-w-full object-contain animate-pulse-fast">`;
-                    document.getElementById('graph-placeholder').style.display = 'none';
-                }
-            } catch(e) {
-                console.warn("Graph fetch failed:", e);
-            }
+    // Graceful fallback for graph visualization
+    const container = document.getElementById('graph-container');
+    const placeholder = document.getElementById('graph-placeholder');
+    
+    try {
+        const res = await fetch(`${API_URL}/api/v1/visualize/graph/${wf.id}`);
+        
+        if(!res.ok) {
+            throw new Error('Graph endpoint not available');
         }
+        
+        const data = await res.json();
+        
+        if(data.image_base64) {
+            container.innerHTML = `<img src="${data.image_base64}" class="max-h-full max-w-full object-contain animate-pulse-fast">`;
+            if(placeholder) placeholder.style.display = 'none';
+        }
+    } catch(e) {
+        // Graceful fallback - show workflow info instead
+        if(placeholder) {
+            placeholder.style.display = 'flex';
+            placeholder.className = 'text-center flex flex-col items-center justify-center p-8';
+            placeholder.innerHTML = `
+                <div class="w-24 h-24 rounded-full bg-ibm-blue/20 flex items-center justify-center mb-6 animate-pulse">
+                    <i class="fas fa-project-diagram text-4xl text-ibm-blue"></i>
+                </div>
+                <div class="text-white font-bold text-xl mb-2">WORKFLOW ACTIVE</div>
+                <div class="text-gray-400 text-sm mb-4">ID: ${wf.id}</div>
+                <div class="flex gap-4 text-xs">
+                    <div class="px-4 py-2 bg-green-500/20 text-green-400 rounded-lg border border-green-500/30">
+                        <i class="fas fa-check-circle mr-2"></i>
+                        Status: ${wf.status || 'RUNNING'}
+                    </div>
+                    <div class="px-4 py-2 bg-blue-500/20 text-blue-400 rounded-lg border border-blue-500/30">
+                        <i class="fas fa-clock mr-2"></i>
+                        Real-time Processing
+                    </div>
+                </div>
+                <div class="mt-4 text-gray-500 text-xs">
+                    Graph visualization available after backend rebuild
+                </div>
+            `;
+        }
+    }
+}
+
 
         function updateLedger() {
             const container = document.getElementById('ledger-container');
