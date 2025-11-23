@@ -246,7 +246,7 @@ text
 ### **Local Development**
 
 1. Clone repository
-git clone https://github.com/yourusername/orchestrix-sentinel.git
+git clone https://github.com/Shyamistic/orchestrix-sentinel.git
 cd orchestrix-sentinel
 
 2. Create virtual environment
