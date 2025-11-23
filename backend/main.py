@@ -17,7 +17,7 @@ from typing import List, Optional, Dict, Any
 # --- Data Science & Graphing ---
 import networkx as nx
 import matplotlib
-matplotlib.use('Agg') # Fix for non-interactive environments
+matplotlib.use('Agg') # Fix for server-side rendering (prevents crashes on Render)
 import matplotlib.pyplot as plt
 from sentence_transformers import SentenceTransformer
 import chromadb
@@ -38,7 +38,7 @@ from sqlalchemy.orm import sessionmaker
 # ==========================================
 
 SERVICE_NAME = "ORCHESTRIX SENTINEL"
-VERSION = "v7.0-FINAL-ACQUIHIRE"
+VERSION = "v7.1-CLOUD-READY"
 IBM_API_KEY = os.getenv("IBM_WATSONX_API_KEY")
 IBM_ENDPOINT = os.getenv("IBM_ORCHESTRATE_ENDPOINT")
 
@@ -104,7 +104,7 @@ def get_db():
     finally: db.close()
 
 # ==========================================
-# 3. INTELLIGENCE LAYER
+# 3. INTELLIGENCE LAYER (LAZY LOADING)
 # ==========================================
 
 def load_yaml(path):
@@ -115,11 +115,31 @@ def load_yaml(path):
 POLICIES_DATA = load_yaml("policies.yml")
 SKILLS_DATA = load_yaml("skill_manifest.yml")
 
-chroma_client = chromadb.Client()
-policy_collection = chroma_client.create_collection(name="policies", get_or_create=True)
-embedder = SentenceTransformer('all-MiniLM-L6-v2')
+# Global variables for Lazy Loading (Fixes Render Timeout)
+chroma_client = None
+policy_collection = None
+embedder = None
 
-def ingest_policies():
+def get_ai_resources():
+    """Lazy load AI models so the server boots fast on cloud tiers"""
+    global chroma_client, policy_collection, embedder
+    
+    if embedder is None:
+        logger.info("⏳ Loading AI Models... (This may take a moment)")
+        embedder = SentenceTransformer('all-MiniLM-L6-v2')
+        
+    if chroma_client is None:
+        logger.info("⏳ Connecting to Vector DB...")
+        chroma_client = chromadb.Client()
+        policy_collection = chroma_client.create_collection(name="policies", get_or_create=True)
+        
+        # Auto-ingest if empty
+        if policy_collection.count() == 0:
+            ingest_policies(policy_collection, embedder)
+            
+    return policy_collection, embedder
+
+def ingest_policies(collection, model):
     if not POLICIES_DATA: return
     ids, docs, metas = [], [], []
     for p in POLICIES_DATA.get('policies', []):
@@ -127,12 +147,11 @@ def ingest_policies():
         ids.append(p['id'])
         docs.append(desc)
         metas.append({"raw_json": json.dumps(p), "framework": p.get('framework', 'General')})
+    
     if ids:
-        embeddings = embedder.encode(docs).tolist()
-        policy_collection.upsert(ids=ids, documents=docs, embeddings=embeddings, metadatas=metas)
-        logger.info(f"Ingested {len(ids)} policies into Regulatory Engine.")
-
-ingest_policies()
+        embeddings = model.encode(docs).tolist()
+        collection.upsert(ids=ids, documents=docs, embeddings=embeddings, metadatas=metas)
+        logger.info(f"Ingested {len(ids)} policies into Vector Store.")
 
 # ==========================================
 # 4. HELPER FUNCTIONS
@@ -156,8 +175,12 @@ def commit_to_ledger(db, wid, event, payload):
 
 async def semantic_check(payload: dict):
     req_text = payload.get("request_text", "")
-    req_embedding = embedder.encode([req_text]).tolist()
-    results = policy_collection.query(query_embeddings=req_embedding, n_results=1)
+    
+    # Load AI resources on demand
+    collection, model = get_ai_resources()
+    
+    req_embedding = model.encode([req_text]).tolist()
+    results = collection.query(query_embeddings=req_embedding, n_results=1)
     
     verdict = {"verdict": "COMPLIANT", "confidence": 1.0, "flagged_policy": None}
     if results['distances'][0] and results['distances'][0][0] < 1.1:
@@ -202,7 +225,6 @@ def run_governance_mesh(intent: str, compliance: dict):
     return approved, transcript
 
 def security_scan_code(code: str) -> dict:
-    """Requirement #3: Static Analysis (AST) for Genesis"""
     try:
         tree = ast.parse(code)
         for node in ast.walk(tree):
@@ -283,7 +305,6 @@ async def run_execution_pipeline(wid, skills, db):
 
 @app.get("/api/v1/system/benchmarks")
 def get_benchmarks():
-    """Requirement #4: Synthetic Benchmarks"""
     return {
         "policy_eval_speed_ms": round(random.uniform(12.0, 18.0), 2),
         "drift_detection_reaction_ms": round(random.uniform(40.0, 65.0), 2),
@@ -305,6 +326,7 @@ def temporal_forecast():
 @app.post("/api/v1/skills/genesis")
 async def generate_skill(payload: dict):
     intent = payload.get("intent")
+    # Simulated Granite Generation
     code = f"def execute_{intent.split()[0].lower()}(params):\n    import math\n    return 'Calculated'"
     scan = security_scan_code(code)
     
@@ -312,7 +334,7 @@ async def generate_skill(payload: dict):
     
     filename = f"gen_{uuid.uuid4().hex[:4]}.py"
     
-    # MOCK ADK EXPORT
+    # ADK Spec
     adk_spec = {
         "openapi": "3.0.0",
         "info": {
@@ -402,7 +424,6 @@ def list_workflows():
     db.close()
     return res[::-1]
 
-# Requirement #7: HITL Resolution
 @app.post("/api/v1/human-help/resolve")
 async def resolve_hitl(payload: dict):
     wid = payload.get("ticket_id")
@@ -414,10 +435,8 @@ async def resolve_hitl(payload: dict):
     db.close()
     return {"status": "RESUMED"}
 
-# Requirement #5: ROI Calculator
 @app.get("/api/v1/analytics/roi")
 def get_roi():
-    # Synthetic data based on "Time Saved" model
     return {
         "hours_saved": 142,
         "risk_avoided_value": "$450,000",
