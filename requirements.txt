@@ -1,7 +1,8 @@
-fastapi
-uvicorn
-sqlalchemy
-requests
-pyyaml
-pydantic
-python-multipart
+fastapi==0.121.3
+uvicorn==0.38.0
+sqlalchemy==2.0.44
+requests==2.32.5
+pydantic==2.12.4
+python-multipart==0.0.20
+networkx==3.2.1
+matplotlib==3.8.2
