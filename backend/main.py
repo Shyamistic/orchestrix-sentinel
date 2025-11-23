@@ -8,27 +8,17 @@ import random
 import logging
 import io
 import base64
-import requests
-import ast
 import time
 from datetime import datetime, timedelta
 from typing import List, Optional, Dict, Any
 
-# --- Data Science & Graphing ---
-import networkx as nx
-import matplotlib
-matplotlib.use('Agg') # Fix for server-side rendering (prevents crashes on Render)
-import matplotlib.pyplot as plt
-from sentence_transformers import SentenceTransformer
-import chromadb
-
-# --- FastAPI & Pydantic ---
+# --- FASTAPI (Lightweight) ---
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 from pydantic import BaseModel
 
-# --- Database (SQLAlchemy) ---
+# --- DATABASE (Lightweight) ---
 from sqlalchemy import create_engine, Column, String, Integer, JSON, Boolean, Float, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -38,7 +28,7 @@ from sqlalchemy.orm import sessionmaker
 # ==========================================
 
 SERVICE_NAME = "ORCHESTRIX SENTINEL"
-VERSION = "v7.1-CLOUD-READY"
+VERSION = "v7.3-ULTRA-FAST"
 IBM_API_KEY = os.getenv("IBM_WATSONX_API_KEY")
 IBM_ENDPOINT = os.getenv("IBM_ORCHESTRATE_ENDPOINT")
 
@@ -55,12 +45,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/health")
+def health_check():
+    """Simple health check for Render"""
+    return {"status": "ok"}
+
 # ==========================================
 # 2. DATABASE LAYER
 # ==========================================
 
-SQLALCHEMY_DATABASE_URL = "sqlite:///./orchestrix.db"
-engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
+DB_PATH = "sqlite:////tmp/orchestrix.db" if os.getenv("RENDER") else "sqlite:///./orchestrix.db"
+engine = create_engine(DB_PATH, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
@@ -104,7 +99,7 @@ def get_db():
     finally: db.close()
 
 # ==========================================
-# 3. INTELLIGENCE LAYER (LAZY LOADING)
+# 3. INTELLIGENCE LAYER (ULTRA LAZY LOADING)
 # ==========================================
 
 def load_yaml(path):
@@ -115,25 +110,30 @@ def load_yaml(path):
 POLICIES_DATA = load_yaml("policies.yml")
 SKILLS_DATA = load_yaml("skill_manifest.yml")
 
-# Global variables for Lazy Loading (Fixes Render Timeout)
+# Global placeholders
 chroma_client = None
 policy_collection = None
 embedder = None
 
 def get_ai_resources():
-    """Lazy load AI models so the server boots fast on cloud tiers"""
+    """
+    Imports and loads heavy AI libraries ONLY when needed.
+    """
     global chroma_client, policy_collection, embedder
     
     if embedder is None:
-        logger.info("⏳ Loading AI Models... (This may take a moment)")
+        logger.info("⏳ Importing AI Libraries... (First Run)")
+        # Import inside function to prevent startup blockage
+        from sentence_transformers import SentenceTransformer
+        import chromadb
+        
+        logger.info("⏳ Loading Model...")
         embedder = SentenceTransformer('all-MiniLM-L6-v2')
         
-    if chroma_client is None:
         logger.info("⏳ Connecting to Vector DB...")
         chroma_client = chromadb.Client()
         policy_collection = chroma_client.create_collection(name="policies", get_or_create=True)
         
-        # Auto-ingest if empty
         if policy_collection.count() == 0:
             ingest_policies(policy_collection, embedder)
             
@@ -176,7 +176,7 @@ def commit_to_ledger(db, wid, event, payload):
 async def semantic_check(payload: dict):
     req_text = payload.get("request_text", "")
     
-    # Load AI resources on demand
+    # LAZY LOAD HERE
     collection, model = get_ai_resources()
     
     req_embedding = model.encode([req_text]).tolist()
@@ -202,7 +202,6 @@ def run_governance_mesh(intent: str, compliance: dict):
     agents = ["Planner", "Validator", "Compliance", "Safety"]
     votes = {}
     transcript = []
-    
     votes["Planner"] = True
     transcript.append({"agent": "Planner", "vote": "YES", "reason": "Intent maps to known skills."})
     
@@ -326,7 +325,6 @@ def temporal_forecast():
 @app.post("/api/v1/skills/genesis")
 async def generate_skill(payload: dict):
     intent = payload.get("intent")
-    # Simulated Granite Generation
     code = f"def execute_{intent.split()[0].lower()}(params):\n    import math\n    return 'Calculated'"
     scan = security_scan_code(code)
     
@@ -334,7 +332,6 @@ async def generate_skill(payload: dict):
     
     filename = f"gen_{uuid.uuid4().hex[:4]}.py"
     
-    # ADK Spec
     adk_spec = {
         "openapi": "3.0.0",
         "info": {
@@ -368,6 +365,10 @@ def agent_debate(wid: str):
 
 @app.get("/api/v1/visualize/graph/{wid}")
 def get_graph_img(wid: str):
+    # LAZY IMPORT GRAPHING TOOLS TO AVOID STARTUP CRASH
+    import networkx as nx
+    import matplotlib.pyplot as plt
+    
     db = SessionLocal()
     wf = db.query(WorkflowDB).filter(WorkflowDB.id == wid).first()
     db.close()
