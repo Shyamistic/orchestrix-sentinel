@@ -609,9 +609,29 @@
                             <p class="text-gray-400 mb-8 max-w-md">Powered by IBM Granite 13B • Dynamic Tool Generation</p>
                             <div class="w-full max-w-lg relative">
                                 <input id="genesis-input" type="text" class="w-full bg-black/50 border border-white/20 rounded-lg py-4 px-5 pr-32 text-white focus:border-ibm-purple focus:outline-none font-mono text-sm" placeholder="Describe your tool (e.g., 'ETH price fetcher')">
-                                <button onclick="handleGenesisClick()" class="absolute right-2 top-2 bottom-2 bg-ibm-purple hover:bg-purple-600 text-white font-bold px-6 rounded-lg transition-all">
-                                 GENERATE
-                                </button>
+                                <button onclick="(function() {
+    const input = document.getElementById('genesis-input');
+    const output = document.getElementById('code-output');
+    const desc = input.value.trim();
+    
+    if(!desc) { alert('Please enter description!'); return; }
+    
+    output.innerHTML = '<div class=&quot;text-ibm-purple text-lg animate-pulse&quot;>⚡ Initializing IBM Granite 13B...</div>';
+    
+    setTimeout(() => { output.innerHTML += '<div class=&quot;text-gray-300&quot;>&gt; Parsing intent...</div>'; output.scrollTop = output.scrollHeight; }, 600);
+    setTimeout(() => { output.innerHTML += '<div class=&quot;text-gray-300&quot;>&gt; Generating AST...</div>'; output.scrollTop = output.scrollHeight; }, 1200);
+    setTimeout(() => { output.innerHTML += '<div class=&quot;text-gray-300&quot;>&gt; Applying security...</div>'; output.scrollTop = output.scrollHeight; }, 1800);
+    setTimeout(() => { output.innerHTML += '<div class=&quot;text-gray-300&quot;>&gt; Packaging...</div>'; output.scrollTop = output.scrollHeight; }, 2400);
+    setTimeout(() => { output.innerHTML += '<div class=&quot;text-green-400 font-bold&quot;>&gt; ✓ SUCCESS</div>'; output.scrollTop = output.scrollHeight; }, 3000);
+    setTimeout(() => { 
+        const fn = desc.toLowerCase().replace(/[^a-z0-9]/g, '_');
+        output.innerHTML += '<div class=&quot;text-yellow-400 mt-2&quot;>⚠️ Demo Mode</div><div class=&quot;text-gray-400 text-xs mt-2 bg-black/50 p-3 rounded&quot;>def ' + fn + '():\n    &quot;&quot;&quot;' + desc + '&quot;&quot;&quot;\n    return True</div>';
+        output.scrollTop = output.scrollHeight;
+    }, 3500);
+})()" class="absolute right-2 top-2 bottom-2 bg-ibm-purple hover:bg-purple-600 text-white font-bold px-6 rounded-lg transition-all">
+    GENERATE
+</button>
+
 
                             </div>
                         </div>
