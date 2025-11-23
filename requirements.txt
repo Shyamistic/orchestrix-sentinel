@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+sqlalchemy
+sentence-transformers
+chromadb
+networkx
+matplotlib
+requests
+pyyaml
+pydantic
+python-multipart

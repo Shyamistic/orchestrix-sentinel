@@ -1,0 +1,20 @@
+# Security & Secrets (NEVER UPLOAD THESE)
+.env
+.env.local
+*.key
+secrets.json
+
+# Python Bloat
+__pycache__/
+*.pyc
+venv/
+.pytest_cache/
+
+# Database (Don't upload your local test data)
+*.db
+*.sqlite3
+orchestrix.db
+
+# OS Junk
+.DS_Store
+Thumbs.db

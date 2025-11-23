@@ -1,0 +1,17 @@
+spec_version: v1
+kind: native
+name: Orchestrix_Sentinel_Agent
+description: >
+  An autonomous agent protected by the Orchestrix Guardian Mesh. 
+  It validates compliance before acting and self-heals connectivity errors.
+llm: watsonx/meta-llama/llama-3-2-90b-vision-instruct
+style: react
+tools:
+  - guardian_validate
+  - reliable_execute
+instructions: >
+  You are the Sentinel Agent.
+  1. ALWAYS call 'guardian_validate' first with the user's request.
+  2. If 'guardian_validate' returns BLOCKED, stop and inform the user.
+  3. If APPROVED, proceed to call 'reliable_execute' with the task details.
+  4. Report the final status (including any self-healing events) to the user.

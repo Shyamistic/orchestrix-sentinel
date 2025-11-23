@@ -1,0 +1,24 @@
+policies:
+  - id: HR-PTO-APPROVAL
+    if:
+      department: HR
+      contains: ["pto", "time off", "vacation"]
+    then:
+      require_approval: true
+      approver_role: manager
+      sla_minutes: 120
+
+  - id: FIN-CONTRACT-ROUTING
+    if:
+      department: Finance
+      contains: ["contract", "invoice", "po", "procure"]
+    then:
+      route_to: "Finance.Review"
+      risk_threshold: 0.6
+      require_approval: true
+
+  - id: DEFAULT-NOTIFY
+    if:
+      contains: ["notify", "slack", "announcement"]
+    then:
+      skills: ["SendSlackNotification"]

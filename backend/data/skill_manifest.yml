@@ -1,0 +1,19 @@
+skills:
+  - name: CreateJiraTicket
+    inputs: [title, description, priority, assignee]
+    category: IT
+  - name: ApprovePTO
+    inputs: [employee_id, start_date, end_date]
+    category: HR
+  - name: GenerateOnboardingChecklist
+    inputs: [employee_name, role]
+    category: HR
+  - name: RouteContractToFinance
+    inputs: [contract_id]
+    category: Finance
+  - name: SendSlackNotification
+    inputs: [channel, message]
+    category: IT
+  - name: General_Chat
+    inputs: [query]
+    category: General
