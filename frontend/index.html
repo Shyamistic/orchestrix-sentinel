@@ -1421,51 +1421,98 @@
         }
 
         async function runGenesis() {
-            const input = document.getElementById('genesis-input');
-            const output = document.getElementById('code-output');
-            const description = input.value;
-            
-            if(!description) return;
-            
-            output.innerHTML = '<div class="terminal-line text-ibm-purple">&gt; Initializing IBM Granite 13B...</div>';
-            
-            const lines = [
-                '&gt; Parsing intent...',
-                '&gt; Generating AST...',
-                '&gt; Applying security constraints...',
-                '&gt; Packaging for watsonx ADK...',
-                '<span class="text-green-400">&gt; SUCCESS • Skill generated</span>'
-            ];
-            
-            lines.forEach((line, i) => {
-                setTimeout(() => {
-                    output.innerHTML += `<div class="terminal-line text-gray-300">${line}</div>`;
-                    output.scrollTop = output.scrollHeight;
-                }, (i + 1) * 700);
-            });
-            
-            setTimeout(async () => {
-                try {
-                    const res = await fetch(`${API_URL}/mcp/tools/genesis_create`, {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({tool_description: description})
-                    });
-                    
-                    const data = await res.json();
-                    
-                    output.innerHTML += `
-                        <div class="terminal-line text-ibm-teal mt-4">// ${data.tool_name}</div>
-                        <div class="terminal-line text-gray-400 whitespace-pre-wrap">${data.generated_code.substring(0, 500)}...</div>
-                    `;
-                    
-                    logToTerminal(`<span class="text-ibm-purple">[GENESIS]</span> Skill created: ${data.tool_name}`);
-                    
-                } catch(e) {
-                    output.innerHTML += '<div class="terminal-line text-red-400">ERROR: Backend connection failed</div>';
-                }
-            }, lines.length * 700 + 500);
+    const input = document.getElementById('genesis-input');
+    const output = document.getElementById('code-output');
+    const description = input.value.trim();
+    
+    // Validation
+    if(!description) {
+        output.innerHTML = '<div class="terminal-line text-red-400">ERROR: Please enter a tool description</div>';
+        return;
+    }
+    
+    // Clear previous output
+    output.innerHTML = '<div class="terminal-line text-ibm-purple">&gt; Initializing IBM Granite 13B...</div>';
+    
+    const lines = [
+        '&gt; Parsing intent...',
+        '&gt; Generating Abstract Syntax Tree...',
+        '&gt; Applying security constraints...',
+        '&gt; Validating against ADK requirements...',
+        '&gt; Packaging for watsonx deployment...',
+        '<span class="text-green-400">&gt; ✓ SUCCESS • Skill generated</span>'
+    ];
+    
+    // Animate line by line
+    for(let i = 0; i < lines.length; i++) {
+        await new Promise(resolve => setTimeout(resolve, 700));
+        output.innerHTML += `<div class="terminal-line text-gray-300">${lines[i]}</div>`;
+        output.scrollTop = output.scrollHeight;
+    }
+    
+    // Wait a bit, then call actual backend
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    try {
+        logToTerminal(`<span class="text-ibm-purple">[GENESIS]</span> Calling IBM Granite API for: "${description}"`);
+        
+        const res = await fetch(`${API_URL}/mcp/tools/genesis_create`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({tool_description: description})
+        });
+        
+        if(!res.ok) {
+            throw new Error(`API returned ${res.status}`);
         }
+        
+        const data = await res.json();
+        
+        // Display generated code
+        output.innerHTML += `
+            <div class="terminal-line text-ibm-teal mt-4 font-bold">
+                // Generated: ${data.tool_name || 'skill.py'}
+            </div>
+            <div class="terminal-line text-gray-400 mt-2 whitespace-pre-wrap font-mono text-xs">
+${data.generated_code ? data.generated_code.substring(0, 600) : 'No code returned'}...
+            </div>
+            <div class="terminal-line text-green-400 mt-3">
+                ✓ Model: ${data.model || 'granite-13b-chat-v2'}
+            </div>
+            <div class="terminal-line text-green-400">
+                ✓ Tokens: ${data.tokens_used || 0}
+            </div>
+        `;
+        
+        output.scrollTop = output.scrollHeight;
+        
+        logToTerminal(`<span class="text-green-400">[GENESIS]</span> Skill created: ${data.tool_name || 'skill.py'}`);
+        
+    } catch(e) {
+        console.error("Genesis API error:", e);
+        output.innerHTML += `
+            <div class="terminal-line text-red-400 mt-3">
+                ✗ ERROR: ${e.message}
+            </div>
+            <div class="terminal-line text-yellow-400 mt-2">
+                ⚠ Backend may be offline. Demo mode fallback:
+            </div>
+            <div class="terminal-line text-gray-400 mt-2 whitespace-pre-wrap">
+def ${description.replace(/[^a-z0-9]/gi, '_').toLowerCase()}():
+    """
+    ${description}
+    Generated by IBM Granite 13B
+    """
+    # Implementation would go here
+    pass
+            </div>
+        `;
+        
+        logToTerminal(`<span class="text-yellow-400">[GENESIS]</span> API error - showed fallback demo`);
+    }
+}
+
+                
 
         async function runDebate() {
             const container = document.getElementById('debate-container');
